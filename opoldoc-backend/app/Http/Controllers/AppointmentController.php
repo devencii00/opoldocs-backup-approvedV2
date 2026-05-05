@@ -140,6 +140,32 @@ class AppointmentController extends Controller
             ->paginate($perPage);
     }
 
+    public function activeExists(Request $request)
+    {
+        $currentUser = $request->user();
+        if (! $currentUser || ! in_array((string) $currentUser->role, ['admin', 'receptionist'], true)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'patient_id' => ['required', 'integer', 'exists:users,user_id'],
+        ]);
+
+        $patientId = (int) $request->query('patient_id');
+        $todayStart = now()->startOfDay();
+
+        $query = Appointment::query()
+            ->where('patient_id', $patientId)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereNotNull('appointment_datetime')
+            ->where('appointment_datetime', '>=', $todayStart);
+
+        return response()->json([
+            'exists' => $query->exists(),
+            'count' => $query->count(),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $currentUser = $request->user();
@@ -262,6 +288,14 @@ class AppointmentController extends Controller
                 return response()->json([
                     'message' => 'All selected services must match the first chosen service.',
                     'code' => 'SERVICE_GROUP_MISMATCH',
+                ], 422);
+            }
+
+            $blocked = ['obsterician - gynecologist', 'obstetrician - gynecologist', 'general surgeon'];
+            if ($data['appointment_type'] === 'walk_in' && $serviceGroups->count() === 1 && in_array((string) $serviceGroups->first(), $blocked, true)) {
+                return response()->json([
+                    'message' => 'Selected service is only available for scheduled appointments.',
+                    'code' => 'SERVICE_SCHEDULED_ONLY',
                 ], 422);
             }
         }

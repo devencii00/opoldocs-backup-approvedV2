@@ -761,7 +761,10 @@ function setAppointmentTab(tab) {
             var html = ''
             list.forEach(function (s) {
                 var title = s.service_name || ('Service #' + s.service_id)
-                var sub = s.description ? String(s.description) : ''
+                var meta = []
+                if (s && s.duration_minutes != null) meta.push(String(s.duration_minutes) + ' min')
+                if (s && s.price != null) meta.push('₱' + String(s.price))
+                var sub = s.description ? String(s.description).trim() : ''
                 var isLast = !!(previousServiceIdSet && previousServiceIdSet[String(s.service_id)])
                 var tag = isLast
                     ? '<span class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Last inquired</span>'
@@ -771,7 +774,8 @@ function setAppointmentTab(tab) {
                         '<span class="min-w-0 truncate">' + escapeHtml(title) + '</span>' +
                         tag +
                     '</div>' +
-                    '<div class="text-[0.72rem] text-slate-500">' + (sub ? escapeHtml(sub) : '—') + '</div>' +
+                    '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(meta.join(' • ') || '—') + '</div>' +
+                    (sub ? '<div class="mt-0.5 text-[0.72rem] text-slate-500">' + escapeHtml(sub) + '</div>' : '') +
                 '</button>'
             })
             serviceResults.innerHTML = html
@@ -833,7 +837,7 @@ function setAppointmentTab(tab) {
                     var parts = []
                     parts.push('Doctor: ' + doctorLabel(doctor))
                     if (previousDoctorId && parseInt(doctor.user_id, 10) === previousDoctorId) {
-                        parts.push('Previous Provider')
+                        parts.push('Last provider')
                     }
                     var dateStr = dateInput && dateInput.value ? String(dateInput.value).slice(0, 10) : new Date().toISOString().slice(0, 10)
                     var dayKey = dayKeyFromDate(dateStr)
@@ -917,14 +921,15 @@ function setAppointmentTab(tab) {
                 var hasSchedule = !!dayKey && hasScheduleAtTime(d, dayKey, dateStr, checkTime)
                 var isSelectable = isDoctorAvailable && hasSchedule
                 var tag = ''
-                if (!isSelectable) tag = 'Unavailable'
-                else if (previousDoctorId && parseInt(d.user_id, 10) === previousDoctorId) tag = 'Previous Provider'
+                if (!isDoctorAvailable) tag = 'Unavailable'
+                else if (!hasSchedule) tag = 'No schedule on this time'
+                else if (previousDoctorId && parseInt(d.user_id, 10) === previousDoctorId) tag = 'Last provider'
                 return { d: d, name: name, isSelectable: isSelectable, tag: tag }
             })
 
             enriched.sort(function (a, b) {
                 if (a.isSelectable !== b.isSelectable) return a.isSelectable ? -1 : 1
-                if ((a.tag === 'Previous Provider') !== (b.tag === 'Previous Provider')) return a.tag === 'Previous Provider' ? -1 : 1
+                if ((a.tag === 'Last provider') !== (b.tag === 'Last provider')) return a.tag === 'Last provider' ? -1 : 1
                 var ai = a.d && a.d.user_id != null ? parseInt(a.d.user_id, 10) : 0
                 var bi = b.d && b.d.user_id != null ? parseInt(b.d.user_id, 10) : 0
                 return (isNaN(bi) ? 0 : bi) - (isNaN(ai) ? 0 : ai)
@@ -942,7 +947,7 @@ function setAppointmentTab(tab) {
                         '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(d.specialization || '—') + '</div>' +
                     '</div>' +
                     (x.tag
-                        ? '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ' + (x.tag === 'Unavailable' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-cyan-500/10 text-cyan-700 border border-cyan-200') + '">' + escapeHtml(x.tag) + '</span>'
+                        ? '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ' + ((x.tag === 'Last provider') ? 'bg-cyan-500/10 text-cyan-700 border border-cyan-200' : 'bg-slate-100 text-slate-500 border border-slate-200') + '">' + escapeHtml(x.tag) + '</span>'
                         : '') +
                 '</button>'
             })
@@ -1828,51 +1833,74 @@ function setAppointmentTab(tab) {
                     body.reason_for_visit = reason
                 }
 
-                apiFetch("{{ url('/api/appointments') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                })
-                    .then(function (response) {
-                        return response.json().then(function (data) {
-                            return { ok: response.ok, status: response.status, data: data }
-                        }).catch(function () {
-                            return { ok: response.ok, status: response.status, data: null }
-                        })
+                function submitAppointment() {
+                    apiFetch("{{ url('/api/appointments') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
                     })
-                    .then(function (result) {
-                        if (!result.ok) {
-                            var message = 'Failed to book appointment.'
-                            if (result.data && result.data.message) {
-                                message = result.data.message
+                        .then(function (response) {
+                            return response.json().then(function (data) {
+                                return { ok: response.ok, status: response.status, data: data }
+                            }).catch(function () {
+                                return { ok: response.ok, status: response.status, data: null }
+                            })
+                        })
+                        .then(function (result) {
+                            if (!result.ok) {
+                                var message = 'Failed to book appointment.'
+                                if (result.data && result.data.message) {
+                                    message = result.data.message
+                                }
+                                showBookAppointmentError(message)
+                                return
                             }
-                            showBookAppointmentError(message)
+
+                            showBookAppointmentSuccess('Appointment has been created successfully.')
+                            if (patientSearch) patientSearch.value = ''
+                            if (serviceSearch) serviceSearch.value = ''
+                            if (doctorSearch) doctorSearch.value = ''
+                            setPatientSelection(null)
+                            selectedServices = []
+                            syncServiceHiddenInput()
+                            renderSelectedServices()
+                            setDoctorSelection(null)
+                            if (dateInput) dateInput.value = ''
+                            if (timeInput) timeInput.value = ''
+                            if (typeInput) typeInput.value = 'scheduled'
+                            if (reasonInput) reasonInput.value = ''
+                            applyAppointmentTypeUI()
+                            syncTypeToggleUI()
+                        })
+                        .catch(function () {
+                            showBookAppointmentError('Network error while booking appointment.')
+                        })
+                        .finally(function () {
+                            setBookSubmitting(false)
+                        })
+                }
+
+                apiFetch("{{ url('/api/appointments/active-exists') }}?patient_id=" + encodeURIComponent(String(patientId)), { method: 'GET' })
+                    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) })
+                    .then(function (res) {
+                        var exists = !!(res && res.ok && res.data && res.data.exists)
+                        if (!exists) {
+                            submitAppointment()
                             return
                         }
-
-                        showBookAppointmentSuccess('Appointment has been created successfully.')
-                        if (patientSearch) patientSearch.value = ''
-                        if (serviceSearch) serviceSearch.value = ''
-                        if (doctorSearch) doctorSearch.value = ''
-                        setPatientSelection(null)
-                        selectedServices = []
-                        syncServiceHiddenInput()
-                        renderSelectedServices()
-                        setDoctorSelection(null)
-                        if (dateInput) dateInput.value = ''
-                        if (timeInput) timeInput.value = ''
-                        if (typeInput) typeInput.value = 'scheduled'
-                        if (reasonInput) reasonInput.value = ''
-                        applyAppointmentTypeUI()
-                        syncTypeToggleUI()
+                        confirmAction('This patient has already an active appointment, Are you sure you want to set another one?', { okText: 'Yes', delayMs: 3000 })
+                            .then(function (confirmed) {
+                                if (!confirmed) {
+                                    setBookSubmitting(false)
+                                    return
+                                }
+                                submitAppointment()
+                            })
                     })
                     .catch(function () {
-                        showBookAppointmentError('Network error while booking appointment.')
-                    })
-                    .finally(function () {
-                        setBookSubmitting(false)
+                        submitAppointment()
                     })
             })
         }
@@ -1898,6 +1926,8 @@ function setAppointmentTab(tab) {
         var confirmOk = document.getElementById('receptionConfirmOk')
         var confirmCancel = document.getElementById('receptionConfirmCancel')
         var confirmResolver = null
+        var confirmDelayTimer = null
+        var confirmOkDefaultHtml = confirmOk ? confirmOk.innerHTML : ''
 
         function setManageSubmitting(isSubmitting) {
             var disabled = !!isSubmitting
@@ -1907,13 +1937,33 @@ function setAppointmentTab(tab) {
             if (manageRefreshBtn) manageRefreshBtn.disabled = disabled
         }
 
-        function confirmAction(message) {
+        function confirmAction(message, options) {
             return new Promise(function (resolve) {
                 if (!confirmOverlay || !confirmMessage || !confirmOk || !confirmCancel) {
                     resolve(window.confirm(message || 'Are you sure?'))
                     return
                 }
+                if (confirmDelayTimer) {
+                    clearTimeout(confirmDelayTimer)
+                    confirmDelayTimer = null
+                }
+                var opts = (options && typeof options === 'object') ? options : {}
+                var okText = String(opts.okText || 'Confirm')
+                var delayMs = opts.delayMs != null ? parseInt(opts.delayMs, 10) : 0
+                if (isNaN(delayMs) || delayMs < 0) delayMs = 0
+
                 confirmMessage.textContent = message || 'Are you sure?'
+                confirmOk.disabled = delayMs > 0
+                if (delayMs > 0) {
+                    confirmOk.innerHTML = '<span class="inline-flex items-center gap-2"><span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span><span>' + okText + '</span></span>'
+                    confirmDelayTimer = setTimeout(function () {
+                        confirmOk.disabled = false
+                        confirmOk.textContent = okText
+                        confirmDelayTimer = null
+                    }, delayMs)
+                } else {
+                    confirmOk.textContent = okText
+                }
                 confirmResolver = resolve
                 confirmOverlay.classList.remove('hidden')
                 confirmOverlay.classList.add('flex')
@@ -1924,6 +1974,14 @@ function setAppointmentTab(tab) {
             if (confirmOverlay) {
                 confirmOverlay.classList.add('hidden')
                 confirmOverlay.classList.remove('flex')
+            }
+            if (confirmDelayTimer) {
+                clearTimeout(confirmDelayTimer)
+                confirmDelayTimer = null
+            }
+            if (confirmOk) {
+                confirmOk.disabled = false
+                confirmOk.innerHTML = confirmOkDefaultHtml || 'Confirm'
             }
             var resolver = confirmResolver
             confirmResolver = null

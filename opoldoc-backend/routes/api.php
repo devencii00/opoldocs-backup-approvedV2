@@ -18,12 +18,17 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\WalkInController;
+use App\Http\Controllers\GuestWalkInLinkController;
+use App\Http\Controllers\PublicGuestWalkInController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/password/forgot', [AuthController::class, 'requestPasswordReset']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+
+Route::post('/public/guest-walk-in/{token}', [PublicGuestWalkInController::class, 'submit']);
+Route::get('/public/guest-walk-in/{token}/check', [PublicGuestWalkInController::class, 'checkDuplicates']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (\Illuminate\Http\Request $request) {
@@ -47,15 +52,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('doctors', DoctorController::class);
     Route::patch('/doctors/{doctor}/availability', [DoctorController::class, 'setAvailability']);
     Route::apiResource('appointments', AppointmentController::class);
+    Route::get('/appointments/active-exists', [AppointmentController::class, 'activeExists']);
     Route::apiResource('visits', VisitController::class);
     Route::apiResource('prescriptions', PrescriptionController::class);
     Route::apiResource('medicines', MedicineController::class);
     Route::apiResource('queues', QueueController::class);
     Route::post('/queues/call-next', [QueueController::class, 'callNext']);
     Route::post('/queues/join', [QueueController::class, 'join']);
+    Route::get('/queues/active-exists', [QueueController::class, 'activeExists']);
     Route::apiResource('transactions', TransactionController::class);
     Route::apiResource('walk-ins', WalkInController::class)->only(['index', 'show', 'store']);
     Route::post('/walk-ins/guest', [WalkInController::class, 'storeGuest']);
+    Route::get('/walk-ins/guest/check-duplicates', [WalkInController::class, 'checkGuestDuplicates']);
+    Route::get('/guest-walk-in-links/current', [GuestWalkInLinkController::class, 'current']);
+    Route::post('/guest-walk-in-links', [GuestWalkInLinkController::class, 'generate']);
+    Route::post('/guest-walk-in-links/{link}/deprecate', [GuestWalkInLinkController::class, 'deprecate']);
     Route::apiResource('personal-information', PersonalInformationController::class)->only(['index', 'show', 'store', 'update']);
     Route::apiResource('patient-verifications', PatientVerificationController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::get('/patient-verifications-stats', [PatientVerificationController::class, 'stats']);

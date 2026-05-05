@@ -155,6 +155,11 @@
                                             </button>
                                         @endif
 
+                                        <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-slate-50 reception-queue-config" data-queue-id="{{ $queueId }}" data-priority-level="{{ $priority }}">
+                                            <span class="material-symbols-outlined text-[16px] leading-none">settings</span>
+                                            Config
+                                        </button>
+
                                         <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 reception-queue-remove" data-queue-id="{{ $queueId }}">
                                             <span class="material-symbols-outlined text-[16px] leading-none">close</span>
                                             Remove
@@ -276,6 +281,56 @@
     </div>
 </div>
 
+<div id="receptionQueueConfigOverlay" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-[0_20px_80px_rgba(15,23,42,0.35)] overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="text-sm font-semibold text-slate-900">Queue Config</div>
+                <div id="receptionQueueConfigMeta" class="mt-0.5 text-[0.78rem] text-slate-500"></div>
+            </div>
+            <button id="receptionQueueConfigClose" type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">
+                <span class="material-symbols-outlined text-[20px] leading-none">close</span>
+            </button>
+        </div>
+        <div class="px-5 py-4">
+            <div id="receptionQueueConfigError" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.75rem] text-red-700"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label for="receptionQueueConfigPriority" class="block text-[0.7rem] text-slate-600 mb-1">Priority level</label>
+                    <select id="receptionQueueConfigPriority" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                        <option value="1">1 : Emergency</option>
+                        <option value="2">2 : PWD</option>
+                        <option value="3">3 : Pregnant</option>
+                        <option value="4">4 : Senior</option>
+                        <option value="5">5 : General</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="receptionQueueConfigMoveSteps" class="block text-[0.7rem] text-slate-600 mb-1">Move levels</label>
+                    <input id="receptionQueueConfigMoveSteps" type="number" min="1" max="4" value="1" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+                <button id="receptionQueueConfigMoveUp" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-[0.78rem] font-semibold hover:bg-slate-800">
+                    <span class="material-symbols-outlined text-[18px] leading-none">arrow_upward</span>
+                    Move up
+                </button>
+                <button id="receptionQueueConfigMoveDown" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-[0.78rem] font-semibold hover:bg-slate-50">
+                    <span class="material-symbols-outlined text-[18px] leading-none">arrow_downward</span>
+                    Move down
+                </button>
+                <div class="flex-1"></div>
+                <button id="receptionQueueConfigSave" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-cyan-600 text-white text-[0.78rem] font-semibold hover:bg-cyan-700">
+                    <span class="material-symbols-outlined text-[18px] leading-none">save</span>
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="receptionConfirmOverlay" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-[0_20px_80px_rgba(15,23,42,0.35)]">
         <div class="px-5 py-4 border-b border-slate-100">
@@ -315,6 +370,17 @@
         var confirmOk = document.getElementById('receptionConfirmOk')
         var confirmResolver = null
 
+        var configOverlay = document.getElementById('receptionQueueConfigOverlay')
+        var configClose = document.getElementById('receptionQueueConfigClose')
+        var configMeta = document.getElementById('receptionQueueConfigMeta')
+        var configError = document.getElementById('receptionQueueConfigError')
+        var configPriority = document.getElementById('receptionQueueConfigPriority')
+        var configMoveSteps = document.getElementById('receptionQueueConfigMoveSteps')
+        var configMoveUp = document.getElementById('receptionQueueConfigMoveUp')
+        var configMoveDown = document.getElementById('receptionQueueConfigMoveDown')
+        var configSave = document.getElementById('receptionQueueConfigSave')
+        var configQueueId = null
+
         function confirmAction(title, message) {
             return new Promise(function (resolve) {
                 confirmResolver = resolve
@@ -342,6 +408,72 @@
         if (confirmOverlay) {
             confirmOverlay.addEventListener('click', function (e) {
                 if (e.target === confirmOverlay) closeConfirm(false)
+            })
+        }
+
+        function showConfigError(message) {
+            if (!configError) return
+            configError.textContent = message || ''
+            configError.classList.toggle('hidden', !message)
+        }
+
+        function closeQueueConfig() {
+            if (configOverlay) configOverlay.classList.add('hidden')
+            configQueueId = null
+            showConfigError('')
+        }
+
+        function openQueueConfig(queueId, priorityLevel, metaText) {
+            configQueueId = queueId ? String(queueId) : null
+            if (!configQueueId) return
+            if (configMeta) configMeta.textContent = metaText || ('Queue #' + String(queueId))
+            if (configPriority) {
+                var p = parseInt(priorityLevel, 10)
+                if (!p || isNaN(p)) p = 5
+                if (p < 1) p = 1
+                if (p > 5) p = 5
+                configPriority.value = String(p)
+            }
+            if (configMoveSteps) configMoveSteps.value = '1'
+            showConfigError('')
+            if (configOverlay) configOverlay.classList.remove('hidden')
+        }
+
+        function updateQueuePriority(nextLevel) {
+            if (!configQueueId || typeof apiFetch !== 'function') return Promise.resolve(false)
+            var level = parseInt(nextLevel, 10)
+            if (!level || isNaN(level)) level = 5
+            if (level < 1) level = 1
+            if (level > 5) level = 5
+
+            if (configSave) configSave.disabled = true
+            showConfigError('')
+            return apiFetch("{{ url('/api/queues') }}/" + encodeURIComponent(configQueueId), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ priority_level: level })
+            })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) })
+                .then(function (res) {
+                    if (!res.ok) {
+                        showConfigError((res.data && res.data.message) ? res.data.message : 'Failed to update priority.')
+                        return false
+                    }
+                    return true
+                })
+                .catch(function () {
+                    showConfigError('Network error while updating priority.')
+                    return false
+                })
+                .finally(function () {
+                    if (configSave) configSave.disabled = false
+                })
+        }
+
+        if (configClose) configClose.addEventListener('click', closeQueueConfig)
+        if (configOverlay) {
+            configOverlay.addEventListener('click', function (e) {
+                if (e.target === configOverlay) closeQueueConfig()
             })
         }
 
@@ -650,6 +782,62 @@
                     })
             })
         }
+
+        document.querySelectorAll('.reception-queue-config').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var queueId = button.getAttribute('data-queue-id')
+                if (!queueId) return
+                var priority = button.getAttribute('data-priority-level') || '5'
+                var row = button.closest ? button.closest('tr.reception-queue-row') : null
+                var code = row ? (row.getAttribute('data-queue-code') || row.getAttribute('data-queue-number') || queueId) : queueId
+                openQueueConfig(queueId, priority, 'Queue #' + String(code))
+            })
+        })
+
+        if (configSave) {
+            configSave.addEventListener('click', function () {
+                if (!configQueueId || !configPriority) return
+                updateQueuePriority(configPriority.value).then(function (ok) {
+                    if (ok) window.location.reload()
+                })
+            })
+        }
+
+        if (configMoveUp) {
+            configMoveUp.addEventListener('click', function () {
+                if (!configQueueId || !configPriority) return
+                var steps = configMoveSteps ? parseInt(configMoveSteps.value, 10) : 1
+                if (!steps || isNaN(steps) || steps < 1) steps = 1
+                if (steps > 4) steps = 4
+                var current = parseInt(configPriority.value, 10)
+                if (!current || isNaN(current)) current = 5
+                var next = Math.max(1, current - steps)
+                configPriority.value = String(next)
+                updateQueuePriority(next).then(function (ok) {
+                    if (ok) window.location.reload()
+                })
+            })
+        }
+
+        if (configMoveDown) {
+            configMoveDown.addEventListener('click', function () {
+                if (!configQueueId || !configPriority) return
+                var steps = configMoveSteps ? parseInt(configMoveSteps.value, 10) : 1
+                if (!steps || isNaN(steps) || steps < 1) steps = 1
+                if (steps > 4) steps = 4
+                var current = parseInt(configPriority.value, 10)
+                if (!current || isNaN(current)) current = 5
+                var next = Math.min(5, current + steps)
+                configPriority.value = String(next)
+                updateQueuePriority(next).then(function (ok) {
+                    if (ok) window.location.reload()
+                })
+            })
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeQueueConfig()
+        })
 
         document.querySelectorAll('.reception-queue-remove').forEach(function (button) {
             button.addEventListener('click', function () {

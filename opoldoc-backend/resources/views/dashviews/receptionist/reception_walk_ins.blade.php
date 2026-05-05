@@ -1,9 +1,9 @@
-<div class="bg-white border border-slate-200 rounded-[18px] shadow-[0_2px_10px_rgba(15,23,42,0.04)] overflow-hidden">
+<div class="bg-white border border-slate-200 rounded-[18px] shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
     <div class="grid grid-cols-2 border-b border-slate-200">
-      <button id="receptionWalkInTabAccount" type="button" class="px-4 py-3 text-xs font-semibold text-white bg-cyan-500 border-b-2 border-cyan-600">
+      <button id="receptionWalkInTabAccount" type="button" class="px-4 py-3 text-xs font-semibold text-white bg-cyan-500 border-b-2 border-cyan-600 rounded-tl-[18px]">
     Walk-in
 </button>
-<button id="receptionWalkInTabGuest" type="button" class="px-4 py-3 text-xs font-semibold text-slate-900 bg-white hover:bg-slate-50 border-l border-slate-200">
+<button id="receptionWalkInTabGuest" type="button" class="px-4 py-3 text-xs font-semibold text-slate-900 bg-white hover:bg-slate-50 border-l border-slate-200 rounded-tr-[18px]">
     Guest walk-in
 </button>
     </div>
@@ -11,8 +11,8 @@
     <div class="p-5 pb-0">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-sm font-semibold text-slate-900">Create walk-in</h2>
-                <p class="text-xs text-slate-500">Register a walk-in based on personal information or an existing patient.</p>
+                <h2 id="receptionWalkInHeaderTitle" class="text-sm font-semibold text-slate-900">Create walk-in</h2>
+                <p id="receptionWalkInHeaderDesc" class="text-xs text-slate-500">Register a walk-in based on personal information or an existing patient.</p>
             </div>
             <span class="text-[0.7rem] text-slate-400 uppercase tracking-widest">Walk-ins</span>
         </div>
@@ -25,7 +25,13 @@
                 <h3 class="text-xs font-semibold text-slate-900">Walk-in without account</h3>
                 <p class="text-[0.72rem] text-slate-500">Creates a patient account + walk-in appointment + queue entry.</p>
             </div>
-            <span class="text-[0.68rem] text-slate-400 uppercase tracking-widest">Guest</span>
+            <div class="flex items-center gap-2">
+                <button id="receptionGuestLinkBtn" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[0.72rem] font-semibold text-slate-700 hover:bg-slate-50">
+                    <span class="material-symbols-outlined text-[18px] leading-none">qr_code_2</span>
+                    Public Link / QR
+                </button>
+                <span class="text-[0.68rem] text-slate-400 uppercase tracking-widest">Guest</span>
+            </div>
         </div>
 
         <div id="receptionGuestWalkInError" class="hidden mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.75rem] text-red-700"></div>
@@ -34,12 +40,16 @@
 
        <form id="receptionGuestWalkInForm" class="grid gap-3 grid-cols-1 md:grid-cols-4 items-start">
             <div>
-                <label for="reception_guest_firstname" class="block text-[0.7rem] text-slate-600 mb-1">First name (optional)</label>
-                <input id="reception_guest_firstname" type="text" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="First name">
+                <label for="reception_guest_firstname" class="block text-[0.7rem] text-slate-600 mb-1">First name</label>
+                <input id="reception_guest_firstname" type="text" required class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="First name">
             </div>
             <div>
-                <label for="reception_guest_lastname" class="block text-[0.7rem] text-slate-600 mb-1">Last name (optional)</label>
-                <input id="reception_guest_lastname" type="text" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Last name">
+                <label for="reception_guest_middlename" class="block text-[0.7rem] text-slate-600 mb-1">Middle name</label>
+                <input id="reception_guest_middlename" type="text" required class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Middle name">
+            </div>
+            <div>
+                <label for="reception_guest_lastname" class="block text-[0.7rem] text-slate-600 mb-1">Last name</label>
+                <input id="reception_guest_lastname" type="text" required class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Last name">
             </div>
             <div>
                 <label for="reception_guest_contact" class="block text-[0.7rem] text-slate-600 mb-1">Contact number (optional)</label>
@@ -62,7 +72,6 @@
                     <input id="reception_guest_doctor_search" type="text" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Type to search doctor" disabled>
                     <input id="reception_guest_doctor_id" type="hidden" required>
                     <div id="receptionGuestDoctorResults" class="hidden absolute left-0 right-0 top-full mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-sm max-h-64 overflow-y-auto overscroll-contain z-50"></div>
-                <div id="receptionGuestDoctorResults" class="hidden absolute left-0 right-0 top-full mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-sm max-h-64 overflow-y-auto overscroll-contain z-50"></div>
                 </div>
                 
                 <div id="receptionGuestDoctorPreview" class="hidden mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[0.78rem] text-slate-700 break-words"></div>
@@ -88,10 +97,6 @@
     </button>
 </div>
         </form>
-
-        <p class="mt-2 text-[0.7rem] text-slate-400">
-            Patient credentials are generated as <span class="font-semibold">patient{id}@mail.com</span> with an auto password.
-        </p>
     </div>
     </div>
 
@@ -165,16 +170,100 @@
     </div>
 </div>
 
+<div id="receptionGuestLinkModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 px-4 py-6 overflow-y-auto">
+    <div class="max-w-2xl mx-auto bg-white rounded-[18px] border border-slate-200 shadow-[0_10px_40px_rgba(15,23,42,0.20)] overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="text-sm font-semibold text-slate-900">Guest walk-in public link</div>
+                <div class="text-xs text-slate-500">Use the QR to let patients register themselves as guest walk-ins.</div>
+            </div>
+            <button id="receptionGuestLinkClose" type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">
+                <span class="material-symbols-outlined text-[20px] leading-none">close</span>
+            </button>
+        </div>
+
+        <div class="p-5 grid gap-4 grid-cols-1 md:grid-cols-2 items-start">
+            <div>
+                <div id="receptionGuestLinkModalError" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.75rem] text-red-700"></div>
+                <div class="text-[0.7rem] text-slate-400 uppercase tracking-widest mb-1">Current active link</div>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 break-words">
+                    <a id="receptionGuestActiveLink" href="#" target="_blank" class="text-cyan-700 font-semibold hover:underline"></a>
+                </div>
+
+                <div class="mt-3 text-[0.7rem] text-slate-400 uppercase tracking-widest mb-1">Static link</div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 break-words">
+                    <a id="receptionGuestStaticLink" href="#" target="_blank" class="text-cyan-700 font-semibold hover:underline"></a>
+                </div>
+
+                <div class="mt-3 text-[0.7rem] text-slate-400 uppercase tracking-widest mb-1">QR display page</div>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 break-words">
+                    <a id="receptionGuestQrPageLink" href="#" target="_blank" class="text-cyan-700 font-semibold hover:underline"></a>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <button id="receptionGuestLinkGenerate" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-cyan-600 text-white text-[0.78rem] font-semibold hover:bg-cyan-700">
+                        <span class="material-symbols-outlined text-[18px] leading-none">autorenew</span>
+                        Generate new link
+                    </button>
+                    <button id="receptionGuestLinkDeprecate" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-[0.78rem] font-semibold hover:bg-slate-50">
+                        <span class="material-symbols-outlined text-[18px] leading-none">do_not_disturb_on</span>
+                        Deprecate current
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="text-[0.7rem] text-slate-400 uppercase tracking-widest mb-2">QR Code</div>
+                <div class="w-[280px] h-[280px] rounded-2xl border border-slate-200 bg-white overflow-hidden flex items-center justify-center">
+                    <img id="receptionGuestQrImg" src="" alt="Guest walk-in QR" class="w-[280px] h-[280px] object-contain">
+                </div>
+                <div class="mt-2 text-[0.72rem] text-slate-500 text-center">
+                    Patients can scan this to open the guest registration page.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="receptionWalkInConfirmOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/40 items-center justify-center p-4">
+    <div class="w-full max-w-sm rounded-2xl bg-white border border-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.24)] p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
+                <span class="material-symbols-outlined text-[18px] leading-none">help</span>
+            </div>
+            <div class="flex-1">
+                <div class="text-sm font-semibold text-slate-900">Confirm</div>
+                <div id="receptionWalkInConfirmMessage" class="text-[0.78rem] text-slate-600 mt-0.5">Are you sure?</div>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center justify-end gap-2">
+            <button type="button" id="receptionWalkInConfirmCancel" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+            <button type="button" id="receptionWalkInConfirmOk" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-[0.78rem] font-semibold hover:bg-slate-800">Yes</button>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var tabAccountBtn = document.getElementById('receptionWalkInTabAccount')
         var tabGuestBtn = document.getElementById('receptionWalkInTabGuest')
         var panelAccount = document.getElementById('receptionWalkInPanelAccount')
         var panelGuest = document.getElementById('receptionWalkInPanelGuest')
+        var headerTitle = document.getElementById('receptionWalkInHeaderTitle')
+        var headerDesc = document.getElementById('receptionWalkInHeaderDesc')
 function setWalkInTab(tab) {
     var isAccount = tab === 'account'
     if (panelAccount) panelAccount.classList.toggle('hidden', !isAccount)
     if (panelGuest) panelGuest.classList.toggle('hidden', isAccount)
+
+    if (headerTitle) {
+        headerTitle.textContent = isAccount ? 'Create walk-in' : 'Create Guest walk-in'
+    }
+    if (headerDesc) {
+        headerDesc.textContent = isAccount
+            ? 'Register a walk-in based on personal information or an existing patient.'
+            : 'Register a guest walk-in based on personal information.'
+    }
 
     if (tabAccountBtn) {
         // Active tab (Account)
@@ -213,6 +302,72 @@ function setWalkInTab(tab) {
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        var overlay = document.getElementById('receptionWalkInConfirmOverlay')
+        var messageEl = document.getElementById('receptionWalkInConfirmMessage')
+        var okBtn = document.getElementById('receptionWalkInConfirmOk')
+        var cancelBtn = document.getElementById('receptionWalkInConfirmCancel')
+        var resolver = null
+        var timer = null
+        var okDefaultHtml = okBtn ? okBtn.innerHTML : ''
+
+        function close(result) {
+            if (overlay) {
+                overlay.classList.add('hidden')
+                overlay.classList.remove('flex')
+            }
+            if (timer) {
+                clearTimeout(timer)
+                timer = null
+            }
+            if (okBtn) {
+                okBtn.disabled = false
+                okBtn.innerHTML = okDefaultHtml || 'Yes'
+            }
+            var r = resolver
+            resolver = null
+            if (typeof r === 'function') r(!!result)
+        }
+
+        function open(message, delayMs) {
+            return new Promise(function (resolve) {
+                if (!overlay || !messageEl || !okBtn || !cancelBtn) {
+                    resolve(window.confirm(message || 'Are you sure?'))
+                    return
+                }
+                if (timer) {
+                    clearTimeout(timer)
+                    timer = null
+                }
+                resolver = resolve
+                messageEl.textContent = message || 'Are you sure?'
+                var ms = delayMs != null ? parseInt(delayMs, 10) : 0
+                if (isNaN(ms) || ms < 0) ms = 0
+                okBtn.disabled = ms > 0
+                if (ms > 0) {
+                    okBtn.innerHTML = '<span class="inline-flex items-center gap-2"><span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span><span>Yes</span></span>'
+                    timer = setTimeout(function () {
+                        okBtn.disabled = false
+                        okBtn.textContent = 'Yes'
+                        timer = null
+                    }, ms)
+                } else {
+                    okBtn.textContent = 'Yes'
+                }
+                overlay.classList.remove('hidden')
+                overlay.classList.add('flex')
+            })
+        }
+
+        if (okBtn) okBtn.addEventListener('click', function () { close(true) })
+        if (cancelBtn) cancelBtn.addEventListener('click', function () { close(false) })
+        if (overlay) overlay.addEventListener('click', function (e) { if (e.target === overlay) close(false) })
+
+        window.receptionWalkInConfirm = open
+    })
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
         var guestForm = document.getElementById('receptionGuestWalkInForm')
         var guestErrorBox = document.getElementById('receptionGuestWalkInError')
         var guestSuccessBox = document.getElementById('receptionGuestWalkInSuccess')
@@ -233,6 +388,13 @@ function setWalkInTab(tab) {
         var guestSelectedDoctor = null
         var guestLoadingServices = false
         var guestLoadingDoctors = false
+        var guestPreviousDoctorId = 0
+        var guestPreviousServiceIds = []
+        var guestPreviousServiceIdSet = {}
+        var guestNameTimer = null
+        var guestFirstNameInput = document.getElementById('reception_guest_firstname')
+        var guestMiddleNameInput = document.getElementById('reception_guest_middlename')
+        var guestLastNameInput = document.getElementById('reception_guest_lastname')
 
         function showGuestError(message) {
             if (!guestErrorBox) return
@@ -297,6 +459,11 @@ function setWalkInTab(tab) {
             return group
         }
 
+        function isWalkInExcludedService(service) {
+            var g = serviceGroup(service)
+            return g === 'obsterician - gynecologist' || g === 'obstetrician - gynecologist' || g === 'general surgeon'
+        }
+
         function extractServiceCategory(serviceName) {
             var raw = String(serviceName || '').trim()
             if (!raw) return ''
@@ -310,6 +477,49 @@ function setWalkInTab(tab) {
             var b = normalizeText(doctorSpecialization)
             if (!a || !b) return false
             return b.indexOf(a) !== -1 || a.indexOf(b) !== -1
+        }
+
+        function dayKeyFromDate(dateStr) {
+            if (!dateStr) return ''
+            var d = new Date(dateStr + 'T00:00:00')
+            if (isNaN(d.getTime())) return ''
+            var keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            return keys[d.getDay()] || ''
+        }
+
+        function minutesFromHHMM(timeStr) {
+            var t = String(timeStr || '').slice(0, 5)
+            if (!/^\d{2}:\d{2}$/.test(t)) return NaN
+            var parts = t.split(':')
+            return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10)
+        }
+
+        function doctorSchedulesForDay(doctor, dayKey, dateStr) {
+            var list = doctor && doctor.doctor_schedules && Array.isArray(doctor.doctor_schedules) ? doctor.doctor_schedules : []
+            var isToday = false
+            if (dateStr) {
+                var today = new Date().toISOString().slice(0, 10)
+                isToday = String(dateStr) === today
+            }
+            return list.filter(function (s) {
+                if (!s) return false
+                if (String(s.day_of_week || '').toLowerCase() !== String(dayKey || '').toLowerCase()) return false
+                if (isToday && s.is_available === false) return false
+                return true
+            })
+        }
+
+        function hasScheduleAtTime(doctor, dayKey, dateStr, hhmm) {
+            var slots = doctorSchedulesForDay(doctor, dayKey, dateStr)
+            if (!hhmm) return slots.length > 0
+            var t = minutesFromHHMM(String(hhmm || '').slice(0, 5))
+            if (isNaN(t)) return slots.length > 0
+            return slots.some(function (s) {
+                var st = minutesFromHHMM(String(s.start_time || '').slice(0, 5))
+                var en = minutesFromHHMM(String(s.end_time || '').slice(0, 5))
+                if (isNaN(st) || isNaN(en)) return false
+                return t >= st && t < en
+            })
         }
 
         function selectedGuestServiceIds() {
@@ -332,6 +542,52 @@ function setWalkInTab(tab) {
             }
         }
 
+        function applyGuestHistory(payload) {
+            guestPreviousDoctorId = payload && payload.previous_doctor_id ? parseInt(payload.previous_doctor_id, 10) : 0
+            if (isNaN(guestPreviousDoctorId)) guestPreviousDoctorId = 0
+            guestPreviousServiceIds = Array.isArray(payload && payload.previous_service_ids) ? payload.previous_service_ids.map(function (v) { return parseInt(v, 10) }).filter(function (v) { return !!v && !isNaN(v) }) : []
+            guestPreviousServiceIds = Array.from(new Set(guestPreviousServiceIds.map(function (v) { return String(v) }))).map(function (v) { return parseInt(v, 10) })
+            guestPreviousServiceIdSet = {}
+            guestPreviousServiceIds.forEach(function (id) { guestPreviousServiceIdSet[String(id)] = true })
+        }
+
+        function loadGuestHistoryForNames() {
+            if (typeof apiFetch !== 'function') return Promise.resolve(null)
+            var fn = guestFirstNameInput ? String(guestFirstNameInput.value || '').trim() : ''
+            var mn = guestMiddleNameInput ? String(guestMiddleNameInput.value || '').trim() : ''
+            var ln = guestLastNameInput ? String(guestLastNameInput.value || '').trim() : ''
+            if (!fn || !mn || !ln) {
+                applyGuestHistory(null)
+                return Promise.resolve(null)
+            }
+            var url = "{{ url('/api/walk-ins/guest/check-duplicates') }}" +
+                '?firstname=' + encodeURIComponent(fn) +
+                '&middlename=' + encodeURIComponent(mn) +
+                '&lastname=' + encodeURIComponent(ln)
+            return apiFetch(url, { method: 'GET' })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) })
+                .then(function (res) {
+                    if (!res || !res.ok) return null
+                    applyGuestHistory(res.data)
+                    return res.data
+                })
+                .catch(function () { return null })
+        }
+
+        function scheduleGuestHistoryLoad() {
+            if (guestNameTimer) clearTimeout(guestNameTimer)
+            guestNameTimer = setTimeout(function () {
+                loadGuestHistoryForNames().then(function () {
+                    if (guestServiceSearch && guestServiceResults && !guestServiceResults.classList.contains('hidden')) {
+                        searchGuestServices(String(guestServiceSearch.value || ''))
+                    }
+                    if (guestDoctorSearch && guestDoctorResults && !guestDoctorResults.classList.contains('hidden')) {
+                        searchGuestDoctors(String(guestDoctorSearch.value || ''))
+                    }
+                })
+            }, 250)
+        }
+
         function renderGuestSelectedServices() {
             if (!guestSelectedServicesEl) return
             var list = Array.isArray(guestSelectedServices) ? guestSelectedServices : []
@@ -343,11 +599,14 @@ function setWalkInTab(tab) {
             guestSelectedServicesEl.innerHTML = list.map(function (s) {
                 var id = parseInt(s && s.service_id != null ? s.service_id : 0, 10)
                 var name = String(s && s.service_name ? s.service_name : '').trim() || 'Service'
+                var meta = []
+                if (s && s.duration_minutes != null) meta.push(String(s.duration_minutes) + ' min')
+                if (s && s.price != null) meta.push('₱' + String(s.price))
                 return '' +
                     '<div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-200 last:border-0">' +
                         '<div class="min-w-0">' +
                             '<div class="text-[0.78rem] text-slate-800 font-semibold truncate">' + escapeHtml(name) + '</div>' +
-                            '<div class="text-[0.72rem] text-slate-500">#' + escapeHtml(id) + '</div>' +
+                            '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(meta.join(' • ') || '—') + '</div>' +
                         '</div>' +
                         '<button type="button" class="reception-guest-remove-service inline-flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50" data-service-id="' + escapeHtml(id) + '">' +
                             '<span class="material-symbols-outlined text-[18px] leading-none">close</span>' +
@@ -388,11 +647,31 @@ function setWalkInTab(tab) {
             if (!guestServiceResults) return
             var list = Array.isArray(items) ? items : []
 
+            list = list.filter(function (s) { return !isWalkInExcludedService(s) })
+
             if (guestSelectedServices && guestSelectedServices.length) {
                 var base = serviceGroup(guestSelectedServices[0])
                 if (base) {
                     list = list.filter(function (s) { return serviceGroup(s) === base })
                 }
+            }
+
+            if (guestPreviousServiceIds && guestPreviousServiceIds.length) {
+                var order = {}
+                guestPreviousServiceIds.forEach(function (id, idx) {
+                    order[String(id)] = idx
+                })
+                var pinned = []
+                var rest = []
+                list.forEach(function (s) {
+                    var sid = s && s.service_id != null ? String(s.service_id) : ''
+                    if (sid !== '' && order[sid] != null) pinned.push(s)
+                    else rest.push(s)
+                })
+                pinned.sort(function (a, b) {
+                    return (order[String(a.service_id)] || 0) - (order[String(b.service_id)] || 0)
+                })
+                list = pinned.concat(rest)
             }
 
             if (!list.length) {
@@ -403,9 +682,21 @@ function setWalkInTab(tab) {
 
             guestServiceResults.innerHTML = list.slice(0, 12).map(function (s) {
                 var name = String(s.service_name || '').trim() || 'Service'
+                var meta = []
+                if (s.duration_minutes != null) meta.push(String(s.duration_minutes) + ' min')
+                if (s.price != null) meta.push('₱' + String(s.price))
+                var desc = s.description != null ? String(s.description).trim() : ''
+                var isLast = !!(guestPreviousServiceIdSet && guestPreviousServiceIdSet[String(s.service_id)])
+                var tag = isLast
+                    ? '<span class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Last inquired</span>'
+                    : ''
                 return '<button type="button" class="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0" data-service-id="' + escapeHtml(s.service_id) + '">' +
-                    '<div class="text-[0.78rem] text-slate-800 font-semibold">' + escapeHtml(name) + '</div>' +
-                    '<div class="text-[0.72rem] text-slate-500">#' + escapeHtml(s.service_id) + '</div>' +
+                    '<div class="text-[0.78rem] text-slate-800 font-semibold flex items-center justify-between gap-2">' +
+                        '<span class="min-w-0 truncate">' + escapeHtml(name) + '</span>' +
+                        tag +
+                    '</div>' +
+                    '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(meta.join(' • ') || '—') + '</div>' +
+                    (desc ? '<div class="mt-0.5 text-[0.72rem] text-slate-500">' + escapeHtml(desc) + '</div>' : '') +
                 '</button>'
             }).join('')
             guestServiceResults.classList.remove('hidden')
@@ -451,6 +742,7 @@ function setWalkInTab(tab) {
                 } else {
                     var label = 'Doctor: ' + doctorDisplayName(doctor)
                     if (doctor.specialization) label += ' • ' + String(doctor.specialization)
+                    if (guestPreviousDoctorId && parseInt(doctor.user_id, 10) === guestPreviousDoctorId) label += ' • Last provider'
                     guestDoctorPreview.textContent = label
                     guestDoctorPreview.classList.remove('hidden')
                 }
@@ -472,12 +764,36 @@ function setWalkInTab(tab) {
                 return
             }
 
-            guestDoctorResults.innerHTML = list.slice(0, 12).map(function (d) {
+            var dateStr = new Date().toISOString().slice(0, 10)
+            var dayKey = dayKeyFromDate(dateStr)
+            var checkTime = new Date().toTimeString().slice(0, 5)
+
+            var enriched = list.slice(0, 20).map(function (d) {
                 var name = doctorDisplayName(d)
                 var spec = d && d.specialization ? String(d.specialization) : ''
-                return '<button type="button" class="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0" data-doctor-id="' + escapeHtml(d.user_id) + '">' +
-                    '<div class="text-[0.78rem] text-slate-800 font-semibold">' + escapeHtml('Dr. ' + name) + '</div>' +
-                    '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(spec || '—') + '</div>' +
+                var isDoctorAvailable = d && d.is_available !== false
+                var hasSchedule = !!dayKey && hasScheduleAtTime(d, dayKey, dateStr, checkTime)
+                var isSelectable = isDoctorAvailable && hasSchedule
+                var tag = ''
+                if (!isDoctorAvailable) tag = 'Unavailable'
+                else if (!hasSchedule) tag = 'No schedule on this time'
+                else if (guestPreviousDoctorId && parseInt(d.user_id, 10) === guestPreviousDoctorId) tag = 'Last provider'
+                return { d: d, name: name, spec: spec, isSelectable: isSelectable, tag: tag }
+            })
+
+            enriched.sort(function (a, b) {
+                if (a.isSelectable !== b.isSelectable) return a.isSelectable ? -1 : 1
+                if ((a.tag === 'Last provider') !== (b.tag === 'Last provider')) return a.tag === 'Last provider' ? -1 : 1
+                return normalizeText(a.name).localeCompare(normalizeText(b.name))
+            })
+
+            guestDoctorResults.innerHTML = enriched.slice(0, 12).map(function (x) {
+                return '<button type="button" class="w-full text-left px-3 py-2 border-b border-slate-100 last:border-0 flex items-start justify-between gap-3 ' + (x.isSelectable ? 'hover:bg-slate-50' : 'bg-slate-50/60 cursor-not-allowed') + '" ' + (x.isSelectable ? '' : 'disabled') + ' data-doctor-id="' + escapeHtml(x.d.user_id) + '">' +
+                    '<div class="min-w-0">' +
+                        '<div class="text-[0.78rem] text-slate-800 font-semibold">' + escapeHtml('Dr. ' + x.name) + '</div>' +
+                        '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(x.spec || '—') + '</div>' +
+                    '</div>' +
+                    (x.tag ? '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ' + (x.tag === 'Last provider' ? 'bg-cyan-500/10 text-cyan-700 border border-cyan-200' : 'bg-slate-100 text-slate-500 border border-slate-200') + '">' + escapeHtml(x.tag) + '</span>' : '') +
                 '</button>'
             }).join('')
             guestDoctorResults.classList.remove('hidden')
@@ -554,6 +870,24 @@ function setWalkInTab(tab) {
         loadGuestDoctors()
         renderGuestSelectedServices()
         syncGuestDoctorEnabled()
+        scheduleGuestHistoryLoad()
+
+        if (guestFirstNameInput) guestFirstNameInput.addEventListener('input', scheduleGuestHistoryLoad)
+        if (guestMiddleNameInput) guestMiddleNameInput.addEventListener('input', scheduleGuestHistoryLoad)
+        if (guestLastNameInput) guestLastNameInput.addEventListener('input', scheduleGuestHistoryLoad)
+
+        function hideResultsOnBlur(inputEl, resultsEl) {
+            if (!inputEl || !resultsEl) return
+            inputEl.addEventListener('blur', function () {
+                setTimeout(function () {
+                    var active = document.activeElement
+                    if (resultsEl.classList.contains('hidden')) return
+                    if (!(resultsEl.contains(active) || inputEl.contains(active))) {
+                        resultsEl.classList.add('hidden')
+                    }
+                }, 0)
+            })
+        }
 
         if (guestServiceSearch) {
             guestServiceSearch.addEventListener('focus', function () {
@@ -577,6 +911,9 @@ function setWalkInTab(tab) {
             })
         }
 
+        hideResultsOnBlur(guestServiceSearch, guestServiceResults)
+        hideResultsOnBlur(guestDoctorSearch, guestDoctorResults)
+
         document.addEventListener('click', function (e) {
             var t = e && e.target ? e.target : null
             if (guestServiceResults && !guestServiceResults.classList.contains('hidden')) {
@@ -589,7 +926,7 @@ function setWalkInTab(tab) {
                     guestDoctorResults.classList.add('hidden')
                 }
             }
-        })
+        }, true)
 
         if (guestForm) {
             guestForm.addEventListener('submit', function (e) {
@@ -600,6 +937,7 @@ function setWalkInTab(tab) {
                 showGuestCreds('')
 
                 var firstNameInput = document.getElementById('reception_guest_firstname')
+                var middleNameInput = document.getElementById('reception_guest_middlename')
                 var lastNameInput = document.getElementById('reception_guest_lastname')
                 var contactInput = document.getElementById('reception_guest_contact')
                 var doctorInput = document.getElementById('reception_guest_doctor_id')
@@ -629,71 +967,240 @@ function setWalkInTab(tab) {
                 }
 
                 var firstName = firstNameInput ? String(firstNameInput.value || '').trim() : ''
+                var middleName = middleNameInput ? String(middleNameInput.value || '').trim() : ''
                 var lastName = lastNameInput ? String(lastNameInput.value || '').trim() : ''
                 var contact = contactInput ? String(contactInput.value || '').trim() : ''
                 var reason = reasonInput ? String(reasonInput.value || '').trim() : ''
                 var priorityLevel = priorityInput && priorityInput.value ? parseInt(priorityInput.value, 10) : null
 
-                if (firstName) body.firstname = firstName
-                if (lastName) body.lastname = lastName
+                if (!firstName || !middleName || !lastName) {
+                    showGuestError('First name, middle name, and last name are required.')
+                    return
+                }
+
+                body.firstname = firstName
+                body.middlename = middleName
+                body.lastname = lastName
                 if (contact) body.contact_number = contact
                 if (reason) body.reason_for_visit = reason
                 if (priorityLevel !== null && !isNaN(priorityLevel)) body.priority_level = priorityLevel
 
-                apiFetch("{{ url('/api/walk-ins/guest') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                })
-                    .then(function (response) {
-                        return response.json().then(function (data) {
-                            return { ok: response.ok, status: response.status, data: data }
-                        }).catch(function () {
-                            return { ok: response.ok, status: response.status, data: null }
-                        })
+                function submitGuestWalkIn() {
+                    apiFetch("{{ url('/api/walk-ins/guest') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
                     })
-                    .then(function (result) {
-                        if (!result.ok) {
-                            var message = 'Failed to create guest walk-in.'
-                            if (result.data && result.data.message) {
-                                message = result.data.message
+                        .then(function (response) {
+                            return response.json().then(function (data) {
+                                return { ok: response.ok, status: response.status, data: data }
+                            }).catch(function () {
+                                return { ok: response.ok, status: response.status, data: null }
+                            })
+                        })
+                        .then(function (result) {
+                            if (!result.ok) {
+                                var message = 'Failed to create guest walk-in.'
+                                if (result.data && result.data.message) {
+                                    message = result.data.message
+                                }
+                                showGuestError(message)
+                                return
                             }
-                            showGuestError(message)
-                            return
+
+                            showGuestSuccess('Walk-in successfuly created and currently on the queue.')
+                            showGuestCreds('')
+
+                            if (firstNameInput) firstNameInput.value = ''
+                            if (middleNameInput) middleNameInput.value = ''
+                            if (lastNameInput) lastNameInput.value = ''
+                            if (contactInput) contactInput.value = ''
+                            guestSelectedServices = []
+                            syncGuestServiceHiddenInput()
+                            renderGuestSelectedServices()
+                            syncGuestDoctorEnabled()
+
+                            if (guestServiceSearch) guestServiceSearch.value = ''
+                            if (guestDoctorSearch) guestDoctorSearch.value = ''
+                            setGuestDoctorSelection(null)
+                            if (doctorInput) doctorInput.value = ''
+                            if (reasonInput) reasonInput.value = ''
+                            if (priorityInput) priorityInput.value = ''
+                        })
+                        .catch(function () {
+                            showGuestError('Network error while creating guest walk-in.')
+                        })
+                }
+
+                loadGuestHistoryForNames()
+                    .then(function (dup) {
+                        if (dup && dup.similar_in_queue) {
+                            var ask = window.receptionWalkInConfirm
+                            if (typeof ask === 'function') {
+                                return ask('There is a patient with a similar personal info already in the queue, are you sure you want to submit this guest?', 3000)
+                                    .then(function (confirmed) {
+                                        if (!confirmed) return
+                                        submitGuestWalkIn()
+                                    })
+                            }
+                            if (!window.confirm('There is a patient with a similar personal info already in the queue, are you sure you want to submit this guest?')) return
                         }
-
-                        var queueNumber = result.data && result.data.queue ? result.data.queue.queue_number : null
-                        var appointmentId = result.data && result.data.appointment ? result.data.appointment.appointment_id : null
-                        var creds = result.data && result.data.credentials ? result.data.credentials : null
-
-                        showGuestSuccess('Guest walk-in created.' + (appointmentId ? ' Appointment #' + appointmentId + '.' : '') + (queueNumber ? ' Queue #' + queueNumber + '.' : ''))
-
-                        if (creds && creds.email && creds.password) {
-                            showGuestCreds('Credentials: ' + String(creds.email) + ' / ' + String(creds.password))
-                        }
-
-                        if (firstNameInput) firstNameInput.value = ''
-                        if (lastNameInput) lastNameInput.value = ''
-                        if (contactInput) contactInput.value = ''
-                        guestSelectedServices = []
-                        syncGuestServiceHiddenInput()
-                        renderGuestSelectedServices()
-                        syncGuestDoctorEnabled()
-
-                        if (guestServiceSearch) guestServiceSearch.value = ''
-                        if (guestDoctorSearch) guestDoctorSearch.value = ''
-                        setGuestDoctorSelection(null)
-                        if (doctorInput) doctorInput.value = ''
-                        if (reasonInput) reasonInput.value = ''
-                        if (priorityInput) priorityInput.value = ''
+                        submitGuestWalkIn()
                     })
                     .catch(function () {
-                        showGuestError('Network error while creating guest walk-in.')
+                        submitGuestWalkIn()
                     })
             })
         }
+    })
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var openBtn = document.getElementById('receptionGuestLinkBtn')
+        var modal = document.getElementById('receptionGuestLinkModal')
+        var closeBtn = document.getElementById('receptionGuestLinkClose')
+        var errBox = document.getElementById('receptionGuestLinkModalError')
+        var activeLinkEl = document.getElementById('receptionGuestActiveLink')
+        var staticLinkEl = document.getElementById('receptionGuestStaticLink')
+        var qrPageLinkEl = document.getElementById('receptionGuestQrPageLink')
+        var qrImg = document.getElementById('receptionGuestQrImg')
+        var generateBtn = document.getElementById('receptionGuestLinkGenerate')
+        var deprecateBtn = document.getElementById('receptionGuestLinkDeprecate')
+
+        var currentLinkId = null
+        var currentActiveUrl = null
+        var currentStaticUrl = null
+        var currentQrUrl = null
+
+        function showError(message) {
+            if (!errBox) return
+            errBox.textContent = message || ''
+            errBox.classList.toggle('hidden', !message)
+        }
+
+        function setQrUrl(url) {
+            if (!qrImg) return
+            var u = String(url || '').trim()
+            if (!u) {
+                qrImg.src = ''
+                return
+            }
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' + encodeURIComponent(u)
+        }
+
+        function setLink(el, url) {
+            if (!el) return
+            var u = String(url || '').trim()
+            el.textContent = u || '—'
+            el.href = u || '#'
+            el.classList.toggle('pointer-events-none', !u)
+            el.classList.toggle('text-slate-400', !u)
+            el.classList.toggle('font-semibold', !!u)
+        }
+
+        function applyPayload(payload) {
+            var link = payload && payload.link ? payload.link : null
+            currentLinkId = link && link.link_id != null ? String(link.link_id) : null
+            currentActiveUrl = payload && payload.active_url ? String(payload.active_url) : null
+            currentStaticUrl = payload && payload.static_url ? String(payload.static_url) : null
+            currentQrUrl = payload && payload.qr_url ? String(payload.qr_url) : null
+
+            setLink(activeLinkEl, currentActiveUrl)
+            setLink(staticLinkEl, currentStaticUrl)
+            setLink(qrPageLinkEl, currentQrUrl)
+
+            var qrTarget = currentActiveUrl || currentStaticUrl
+            setQrUrl(qrTarget)
+
+            if (deprecateBtn) deprecateBtn.disabled = !currentLinkId
+        }
+
+        function loadCurrent() {
+            if (typeof apiFetch !== 'function') return
+            showError('')
+            apiFetch("{{ url('/api/guest-walk-in-links/current') }}", { method: 'GET' })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) })
+                .then(function (res) {
+                    if (!res.ok) {
+                        showError((res.data && res.data.message) ? res.data.message : 'Failed to load current link.')
+                        return
+                    }
+                    applyPayload(res.data)
+                })
+                .catch(function () {
+                    showError('Network error while loading current link.')
+                })
+        }
+
+        function generateNew() {
+            if (typeof apiFetch !== 'function') return
+            showError('')
+            if (generateBtn) generateBtn.disabled = true
+            apiFetch("{{ url('/api/guest-walk-in-links') }}", { method: 'POST' })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) })
+                .then(function (res) {
+                    if (!res.ok) {
+                        showError((res.data && res.data.message) ? res.data.message : 'Failed to generate new link.')
+                        return
+                    }
+                    applyPayload(res.data)
+                })
+                .catch(function () {
+                    showError('Network error while generating new link.')
+                })
+                .finally(function () {
+                    if (generateBtn) generateBtn.disabled = false
+                })
+        }
+
+        function deprecateCurrent() {
+            if (!currentLinkId || typeof apiFetch !== 'function') return
+            showError('')
+            if (deprecateBtn) deprecateBtn.disabled = true
+            apiFetch("{{ url('/api/guest-walk-in-links') }}/" + encodeURIComponent(currentLinkId) + "/deprecate", { method: 'POST' })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) })
+                .then(function (res) {
+                    if (!res.ok) {
+                        showError((res.data && res.data.message) ? res.data.message : 'Failed to deprecate current link.')
+                        return
+                    }
+                    applyPayload(res.data)
+                })
+                .catch(function () {
+                    showError('Network error while deprecating link.')
+                })
+                .finally(function () {
+                    if (deprecateBtn) deprecateBtn.disabled = !currentLinkId
+                })
+        }
+
+        function openModal() {
+            if (!modal) return
+            modal.classList.remove('hidden')
+            loadCurrent()
+        }
+
+        function closeModal() {
+            if (!modal) return
+            modal.classList.add('hidden')
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal)
+        if (closeBtn) closeBtn.addEventListener('click', closeModal)
+        if (generateBtn) generateBtn.addEventListener('click', generateNew)
+        if (deprecateBtn) deprecateBtn.addEventListener('click', deprecateCurrent)
+
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e && e.target === modal) closeModal()
+            })
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal()
+        })
     })
 </script>
 
@@ -741,11 +1248,14 @@ function setWalkInTab(tab) {
         var doctors = []
         var servicesLoaded = false
         var servicesLoading = false
+        var servicesLoadError = ''
         var popularServices = []
         var popularServicesLoaded = false
         var popularServicesLoading = false
+        var popularServicesLoadError = ''
         var doctorsLoaded = false
         var doctorsLoading = false
+        var doctorsLoadError = ''
         var doctorSchedules = []
         var doctorAvailableDaySet = {}
         var doctorAppointments = []
@@ -969,6 +1479,11 @@ function setWalkInTab(tab) {
             return group
         }
 
+        function isWalkInExcludedService(service) {
+            var g = serviceGroup(service)
+            return g === 'obsterician - gynecologist' || g === 'obstetrician - gynecologist' || g === 'general surgeon'
+        }
+
         function selectedServiceIds() {
             return (selectedServices || [])
                 .map(function (s) { return parseInt(s && s.service_id != null ? s.service_id : 0, 10) })
@@ -999,7 +1514,7 @@ function setWalkInTab(tab) {
                     '<div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-200 last:border-0">' +
                         '<div class="min-w-0">' +
                             '<div class="text-[0.78rem] text-slate-800 font-semibold truncate">' + escapeHtml(name) + '</div>' +
-                            '<div class="text-[0.72rem] text-slate-500">#' + escapeHtml(id) + (meta.length ? ' • ' + escapeHtml(meta.join(' • ')) : '') + '</div>' +
+                            '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(meta.join(' • ') || '—') + '</div>' +
                         '</div>' +
                         '<button type="button" class="reception-remove-service inline-flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 text-slate-600 hover:bg-white" data-service-id="' + escapeHtml(id) + '">' +
                             '<span class="material-symbols-outlined text-[18px] leading-none">close</span>' +
@@ -1045,6 +1560,12 @@ function setWalkInTab(tab) {
             if (!serviceResults) return
             var list = Array.isArray(items) ? items : []
 
+            var typeEl = document.getElementById('reception_appointment_type')
+            var type = typeEl && typeEl.value ? String(typeEl.value) : 'walk_in'
+            if (type === 'walk_in') {
+                list = list.filter(function (s) { return !isWalkInExcludedService(s) })
+            }
+
             if (selectedServices && selectedServices.length) {
                 var base = serviceGroup(selectedServices[0])
                 if (base) {
@@ -1087,12 +1608,14 @@ function setWalkInTab(tab) {
                 var meta = []
                 if (s.duration_minutes != null) meta.push(String(s.duration_minutes) + ' min')
                 if (s.price != null) meta.push('₱' + String(s.price))
+                var desc = s.description != null ? String(s.description).trim() : ''
                 html += '<button type="button" class="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0">' +
                     '<div class="text-[0.78rem] text-slate-800 font-semibold flex items-center justify-between gap-2">' +
                         '<span class="min-w-0 truncate">' + escapeHtml(name) + '</span>' +
                         tag +
                     '</div>' +
-                    '<div class="text-[0.72rem] text-slate-500">#' + escapeHtml(s.service_id) + (meta.length ? ' • ' + escapeHtml(meta.join(' • ')) : '') + '</div>' +
+                    '<div class="text-[0.72rem] text-slate-500">' + escapeHtml(meta.join(' • ') || '—') + '</div>' +
+                    (desc ? '<div class="mt-0.5 text-[0.72rem] text-slate-500">' + escapeHtml(desc) + '</div>' : '') +
                 '</button>'
             })
             serviceResults.innerHTML = html
@@ -1113,14 +1636,24 @@ function setWalkInTab(tab) {
             var list = Array.isArray(services) ? services : []
 
             if (!q) {
-                if (!popularServicesLoaded) {
-                    if (serviceResults) {
-                        serviceResults.innerHTML = '<div class="px-3 py-2 text-[0.75rem] text-slate-500">Loading services…</div>'
-                        serviceResults.classList.remove('hidden')
-                    }
+                var popularList = Array.isArray(popularServices) ? popularServices : []
+                if (popularServicesLoaded && popularList.length) {
+                    renderServiceResults(popularList.slice(0, 10))
                     return
                 }
-                renderServiceResults((popularServices || []).slice(0, 10))
+
+                if (servicesLoaded && list.length) {
+                    renderServiceResults(list.slice(0, 10))
+                    return
+                }
+
+                if (serviceResults) {
+                    var isLoading = servicesLoading || popularServicesLoading
+                    var hasLoadError = !isLoading && !servicesLoaded && !!servicesLoadError
+                    var message = hasLoadError ? servicesLoadError : (isLoading ? 'Loading services…' : 'No services available.')
+                    serviceResults.innerHTML = '<div class="px-3 py-2 text-[0.75rem] text-slate-500">' + escapeHtml(message) + '</div>'
+                    serviceResults.classList.remove('hidden')
+                }
                 return
             }
             var filtered = list.filter(function (s) {
@@ -1168,7 +1701,7 @@ function setWalkInTab(tab) {
 
                     parts.push('Name: ' + name)
                     if (doctor.specialization) parts.push('Specialization: ' + doctor.specialization)
-                    if (previousDoctorId && parseInt(doctor.user_id, 10) === previousDoctorId) parts.push('Previous Provider')
+                    if (previousDoctorId && parseInt(doctor.user_id, 10) === previousDoctorId) parts.push('Last provider')
                     parts.push('Availability: ' + ((doctor.is_available !== false && hasSchedule) ? 'Available' : 'Unavailable'))
                     if (categories.length) parts.push('Service match: ' + (matchesService ? 'Yes' : 'No'))
                     doctorPreview.textContent = parts.join(' • ')
@@ -1255,8 +1788,9 @@ function setWalkInTab(tab) {
                 var hasSchedule = !!dayKey && hasScheduleAtTime(d, dayKey, dateStr, checkTime)
                 var isSelectable = isDoctorAvailable && hasSchedule
                 var tag = ''
-                if (!isSelectable) tag = 'Unavailable'
-                else if (previousDoctorId && parseInt(d.user_id, 10) === previousDoctorId) tag = 'Previous Provider'
+                if (!isDoctorAvailable) tag = 'Unavailable'
+                else if (!hasSchedule) tag = 'No schedule on this time'
+                else if (previousDoctorId && parseInt(d.user_id, 10) === previousDoctorId) tag = 'Last provider'
                 return {
                     d: d,
                     name: name,
@@ -1268,7 +1802,7 @@ function setWalkInTab(tab) {
 
             enriched.sort(function (a, b) {
                 if (a.isSelectable !== b.isSelectable) return a.isSelectable ? -1 : 1
-                if ((a.tag === 'Previous Provider') !== (b.tag === 'Previous Provider')) return a.tag === 'Previous Provider' ? -1 : 1
+                if ((a.tag === 'Last provider') !== (b.tag === 'Last provider')) return a.tag === 'Last provider' ? -1 : 1
                 return normalizeText(a.name).localeCompare(normalizeText(b.name))
             })
 
@@ -1282,7 +1816,7 @@ function setWalkInTab(tab) {
                         '<div class="text-[0.72rem] text-slate-500">#' + escapeHtml(d.user_id) + (meta ? ' • ' + escapeHtml(meta) : '') + '</div>' +
                     '</div>' +
                     (x.tag
-                        ? '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ' + (x.tag === 'Unavailable' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-cyan-500/10 text-cyan-700 border border-cyan-200') + '">' + escapeHtml(x.tag) + '</span>'
+                        ? '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ' + (x.tag === 'Last provider' ? 'bg-cyan-500/10 text-cyan-700 border border-cyan-200' : 'bg-slate-100 text-slate-500 border border-slate-200') + '">' + escapeHtml(x.tag) + '</span>'
                         : '') +
                 '</button>'
             })
@@ -1859,6 +2393,7 @@ function setWalkInTab(tab) {
             if (typeof apiFetch !== 'function') return
             if (!servicesLoaded && !servicesLoading) {
                 servicesLoading = true
+                servicesLoadError = ''
                 apiFetch("{{ url('/api/services') }}?per_page=100", { method: 'GET' })
                     .then(function (r) { return readResponse(r) })
                     .then(function (res) {
@@ -1868,24 +2403,32 @@ function setWalkInTab(tab) {
                             if (serviceSearch && document.activeElement === serviceSearch) {
                                 searchServices(String(serviceSearch.value || '').trim())
                             }
+                        } else {
+                            servicesLoadError = (res.data && res.data.message) ? String(res.data.message) : 'Failed to load services.'
                         }
                     })
+                    .catch(function () { servicesLoadError = 'Failed to load services.' })
                     .finally(function () { servicesLoading = false })
             }
             if (!popularServicesLoaded && !popularServicesLoading) {
                 popularServicesLoading = true
+                popularServicesLoadError = ''
                 apiFetch("{{ url('/api/services-popular') }}?limit=10", { method: 'GET' })
                     .then(function (r) { return readResponse(r) })
                     .then(function (res) {
                         if (res.ok) {
                             popularServices = Array.isArray(res.data) ? res.data : (res.data && Array.isArray(res.data.data) ? res.data.data : [])
                             popularServicesLoaded = true
+                        } else {
+                            popularServicesLoadError = (res.data && res.data.message) ? String(res.data.message) : 'Failed to load popular services.'
                         }
                     })
+                    .catch(function () { popularServicesLoadError = 'Failed to load popular services.' })
                     .finally(function () { popularServicesLoading = false })
             }
             if (!doctorsLoaded && !doctorsLoading) {
                 doctorsLoading = true
+                doctorsLoadError = ''
                 apiFetch("{{ url('/api/doctors') }}?per_page=100", { method: 'GET' })
                     .then(function (r) { return readResponse(r) })
                     .then(function (res) {
@@ -1896,8 +2439,11 @@ function setWalkInTab(tab) {
                             if (doctorSearch && document.activeElement === doctorSearch) {
                                 searchDoctors(String(doctorSearch.value || '').trim())
                             }
+                        } else {
+                            doctorsLoadError = (res.data && res.data.message) ? String(res.data.message) : 'Failed to load doctors.'
                         }
                     })
+                    .catch(function () { doctorsLoadError = 'Failed to load doctors.' })
                     .finally(function () { doctorsLoading = false })
             }
         }
@@ -1949,6 +2495,13 @@ function setWalkInTab(tab) {
                 if (dateInput) dateInput.value = ''
                 if (timeInput) timeInput.value = ''
                 selectedSlotStart = null
+                var filteredServices = (selectedServices || []).filter(function (s) { return !isWalkInExcludedService(s) })
+                if (filteredServices.length !== (selectedServices || []).length) {
+                    selectedServices = filteredServices
+                    syncServiceHiddenInput()
+                    renderSelectedServices()
+                    filterDoctorsByService()
+                }
             } else {
                 if (doctorSelect && doctorSelect.value && (!doctorSchedules || !doctorSchedules.length)) {
                     clearAvailability()
@@ -1966,6 +2519,19 @@ function setWalkInTab(tab) {
 
         if (typeScheduledBtn) typeScheduledBtn.addEventListener('click', function () { setAppointmentType('scheduled') })
         if (typeWalkInBtn) typeWalkInBtn.addEventListener('click', function () { setAppointmentType('walk_in') })
+
+        function hideResultsOnBlur(inputEl, resultsEl) {
+            if (!inputEl || !resultsEl) return
+            inputEl.addEventListener('blur', function () {
+                setTimeout(function () {
+                    var active = document.activeElement
+                    if (resultsEl.classList.contains('hidden')) return
+                    if (!(resultsEl.contains(active) || inputEl.contains(active))) {
+                        resultsEl.classList.add('hidden')
+                    }
+                }, 0)
+            })
+        }
 
         if (patientSearch) {
             patientSearch.addEventListener('input', function () {
@@ -1988,10 +2554,12 @@ function setWalkInTab(tab) {
 
         if (serviceSearch) {
             serviceSearch.addEventListener('input', function () {
+                loadServicesAndDoctors()
                 var q = String(serviceSearch.value || '').trim()
                 searchServices(q)
             })
             serviceSearch.addEventListener('focus', function () {
+                loadServicesAndDoctors()
                 var q = String(serviceSearch.value || '').trim()
                 searchServices(q)
             })
@@ -1999,15 +2567,21 @@ function setWalkInTab(tab) {
 
         if (doctorSearch) {
             doctorSearch.addEventListener('input', function () {
+                loadServicesAndDoctors()
                 var q = String(doctorSearch.value || '').trim()
                 if (selectedDoctor) setDoctorSelection(null)
                 searchDoctors(q)
             })
             doctorSearch.addEventListener('focus', function () {
+                loadServicesAndDoctors()
                 var q = String(doctorSearch.value || '').trim()
                 searchDoctors(q)
             })
         }
+
+        hideResultsOnBlur(patientSearch, patientResults)
+        hideResultsOnBlur(serviceSearch, serviceResults)
+        hideResultsOnBlur(doctorSearch, doctorResults)
 
         if (dateSelect) {
             dateSelect.addEventListener('change', onDateChanged)
@@ -2076,7 +2650,7 @@ function setWalkInTab(tab) {
                     closeTimeOverlay()
                 }
             }
-        })
+        }, true)
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
@@ -2177,7 +2751,9 @@ function setWalkInTab(tab) {
 
                         var created = result.data || {}
                         function afterQueue() {
-                            showSuccess((type === 'walk_in' ? 'Walk-in' : 'Appointment') + ' has been created successfully. Queue entry created.')
+                            showSuccess(type === 'walk_in'
+                                ? 'Walk-in successfuly created and currently on the queue.'
+                                : 'Appointment has been created successfully. Queue entry created.')
                             if (patientSearch) patientSearch.value = ''
                             if (serviceSearch) serviceSearch.value = ''
                             if (doctorSearch) doctorSearch.value = ''

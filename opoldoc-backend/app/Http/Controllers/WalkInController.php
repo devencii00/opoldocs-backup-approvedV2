@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Queue;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -43,28 +44,66 @@ class WalkInController extends Controller
             'appointment_datetime' => ['nullable', 'date'],
             'reason_for_visit' => ['nullable', 'string'],
             'priority_level' => ['nullable', 'integer'],
-            'firstname' => ['nullable', 'string'],
-            'lastname' => ['nullable', 'string'],
-            'middlename' => ['nullable', 'string'],
+            'firstname' => ['required', 'string'],
+            'middlename' => ['required', 'string'],
+            'lastname' => ['required', 'string'],
             'birthdate' => ['nullable', 'date'],
             'sex' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'contact_number' => ['nullable', 'string'],
         ]);
 
+        $serviceIds = array_values(array_unique(array_map('intval', $data['service_ids'] ?? [])));
+        if (count($serviceIds)) {
+            $services = Service::query()
+                ->whereIn('service_id', $serviceIds)
+                ->get(['service_id', 'service_name', 'is_active']);
+
+            $inactive = $services->firstWhere('is_active', false);
+            if ($inactive) {
+                return response()->json([
+                    'message' => 'Selected service is inactive.',
+                    'code' => 'SERVICE_INACTIVE',
+                ], 422);
+            }
+
+            $serviceGroups = $services
+                ->map(function (Service $service) {
+                    $serviceName = (string) ($service->service_name ?? '');
+                    $serviceCategory = strtolower(trim(explode(':', $serviceName, 2)[0] ?? $serviceName));
+                    return trim($serviceCategory);
+                })
+                ->filter(fn ($v) => (string) $v !== '')
+                ->unique()
+                ->values();
+
+            if ($serviceGroups->count() > 1) {
+                return response()->json([
+                    'message' => 'All selected services must match the first chosen service.',
+                    'code' => 'SERVICE_GROUP_MISMATCH',
+                ], 422);
+            }
+
+            $blocked = ['obsterician - gynecologist', 'obstetrician - gynecologist', 'general surgeon'];
+            if ($serviceGroups->count() === 1 && in_array((string) $serviceGroups->first(), $blocked, true)) {
+                return response()->json([
+                    'message' => 'Selected service is only available for scheduled appointments.',
+                    'code' => 'SERVICE_SCHEDULED_ONLY',
+                ], 422);
+            }
+        }
+
         $plainPassword = Str::random(12);
 
-        $result = DB::transaction(function () use ($currentUser, $data, $plainPassword) {
-            $serviceIds = array_values(array_unique(array_map('intval', $data['service_ids'] ?? [])));
-
+        $result = DB::transaction(function () use ($currentUser, $data, $plainPassword, $serviceIds) {
             $patient = User::create([
                 'email' => null,
                 'password_hash' => Hash::make($plainPassword),
                 'role' => 'patient',
                 'status' => 'active',
-                'firstname' => $data['firstname'] ?? null,
-                'lastname' => $data['lastname'] ?? null,
-                'middlename' => $data['middlename'] ?? null,
+                'firstname' => trim((string) $data['firstname']),
+                'middlename' => trim((string) $data['middlename']),
+                'lastname' => trim((string) $data['lastname']),
                 'birthdate' => $data['birthdate'] ?? null,
                 'sex' => $data['sex'] ?? null,
                 'address' => $data['address'] ?? null,
@@ -126,6 +165,94 @@ class WalkInController extends Controller
         });
 
         return response()->json($result, 201);
+    }
+
+    public function checkGuestDuplicates(Request $request)
+    {
+        $currentUser = $request->user();
+        if (! $currentUser || ! in_array((string) $currentUser->role, ['admin', 'receptionist'], true)) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'firstname' => ['required', 'string'],
+            'middlename' => ['required', 'string'],
+            'lastname' => ['required', 'string'],
+        ]);
+
+        $first = trim((string) $data['firstname']);
+        $middle = trim((string) $data['middlename']);
+        $last = trim((string) $data['lastname']);
+
+        if ($first === '' || $middle === '' || $last === '') {
+            return response()->json([
+                'match_count' => 0,
+                'similar_in_queue' => false,
+                'previous_doctor_id' => null,
+                'previous_service_ids' => [],
+            ]);
+        }
+
+        $likeFirst = '%'.$first.'%';
+        $likeMiddle = '%'.$middle.'%';
+        $likeLast = '%'.$last.'%';
+
+        $patientIds = User::query()
+            ->where('role', 'patient')
+            ->where('firstname', 'like', $likeFirst)
+            ->where('middlename', 'like', $likeMiddle)
+            ->where('lastname', 'like', $likeLast)
+            ->limit(25)
+            ->pluck('user_id')
+            ->map(fn ($v) => (int) $v)
+            ->filter(fn ($v) => $v > 0)
+            ->values()
+            ->all();
+
+        if (! count($patientIds)) {
+            return response()->json([
+                'match_count' => 0,
+                'similar_in_queue' => false,
+                'previous_doctor_id' => null,
+                'previous_service_ids' => [],
+            ]);
+        }
+
+        $date = now()->toDateString();
+
+        $similarInQueue = Queue::query()
+            ->whereDate('queue_datetime', $date)
+            ->whereIn('status', ['waiting', 'serving'])
+            ->whereHas('appointment', function ($q) use ($patientIds) {
+                $q->whereIn('patient_id', $patientIds);
+            })
+            ->exists();
+
+        $lastAppointment = Appointment::query()
+            ->with(['services'])
+            ->whereIn('patient_id', $patientIds)
+            ->orderByDesc('appointment_datetime')
+            ->orderByDesc('appointment_id')
+            ->first();
+
+        $previousDoctorId = $lastAppointment && $lastAppointment->doctor_id ? (int) $lastAppointment->doctor_id : null;
+        $previousServiceIds = [];
+        if ($lastAppointment) {
+            foreach (($lastAppointment->services ?? []) as $service) {
+                $sid = (int) ($service->service_id ?? 0);
+                if ($sid > 0) {
+                    $previousServiceIds[] = $sid;
+                }
+            }
+            $previousServiceIds = array_values(array_unique($previousServiceIds));
+        }
+
+        return response()->json([
+            'match_count' => count($patientIds),
+            'similar_in_queue' => $similarInQueue,
+            'previous_doctor_id' => $previousDoctorId,
+            'previous_service_ids' => $previousServiceIds,
+        ]);
     }
 
     public function show(Appointment $walk_in)

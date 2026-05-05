@@ -163,6 +163,33 @@ class QueueController extends Controller
         return $paginator;
     }
 
+    public function activeExists(Request $request)
+    {
+        $currentUser = $request->user();
+        if (! $currentUser || ! in_array((string) $currentUser->role, ['admin', 'receptionist'], true)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'patient_id' => ['required', 'integer', 'exists:users,user_id'],
+        ]);
+
+        $patientId = (int) $request->query('patient_id');
+        $date = now()->toDateString();
+
+        $exists = Queue::query()
+            ->whereDate('queue_datetime', $date)
+            ->whereIn('status', ['waiting', 'serving'])
+            ->whereHas('appointment', function ($q) use ($patientId) {
+                $q->where('patient_id', $patientId);
+            })
+            ->exists();
+
+        return response()->json([
+            'exists' => $exists,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $currentUser = $request->user();

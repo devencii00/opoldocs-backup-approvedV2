@@ -47,141 +47,28 @@
             </tbody>
         </table>
     </div>
-
-    <div id="adminDoctorSchedulePanel" class="mt-4 hidden border border-slate-100 rounded-2xl bg-slate-50/60 p-4">
-        <div class="flex items-center justify-between mb-2">
-            <div>
-                <h3 class="text-xs font-semibold text-slate-900" id="adminDoctorScheduleTitle">Manage Schedule</h3>
-                <p class="text-[0.7rem] text-slate-500">Add time slots, assign days, and view doctor schedules.</p>
-            </div>
-            <button type="button" id="adminDoctorScheduleClose" class="text-[0.72rem] text-slate-500 hover:text-slate-700 font-semibold">
-                Close
-            </button>
-        </div>
-
-        <form id="adminDoctorScheduleForm" class="mb-3 grid gap-2 grid-cols-1 md:grid-cols-7 items-end">
-            <div>
-                <label for="admin_schedule_from_day" class="block text-[0.7rem] text-slate-600 mb-1">From day</label>
-                <select id="admin_schedule_from_day" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                    <option value="">Select</option>
-                    <option value="mon">Mon</option>
-                    <option value="tue">Tue</option>
-                    <option value="wed">Wed</option>
-                    <option value="thu">Thu</option>
-                    <option value="fri">Fri</option>
-                    <option value="sat">Sat</option>
-                    <option value="sun">Sun</option>
-                </select>
-            </div>
-            <div>
-                <label for="admin_schedule_to_day" class="block text-[0.7rem] text-slate-600 mb-1">To day</label>
-                <select id="admin_schedule_to_day" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                    <option value="">Select</option>
-                    <option value="mon">Mon</option>
-                    <option value="tue">Tue</option>
-                    <option value="wed">Wed</option>
-                    <option value="thu">Thu</option>
-                    <option value="fri">Fri</option>
-                    <option value="sat">Sat</option>
-                    <option value="sun">Sun</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-[0.7rem] text-slate-600 mb-1">Start time</label>
-                <div class="grid grid-cols-3 gap-1">
-                    <select id="admin_schedule_start_hour" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                        <option value="">HH</option>
-                        @for ($h = 1; $h <= 12; $h++)
-                            <option value="{{ $h }}">{{ $h }}</option>
-                        @endfor
-                    </select>
-                    <select id="admin_schedule_start_min" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                        <option value="">MM</option>
-                        <option value="00">00</option>
-                        <option value="15">15</option>
-                        <option value="30">30</option>
-                        <option value="45">45</option>
-                    </select>
-                    <select id="admin_schedule_start_ampm" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                        <option value="">AM/PM</option>
-                        <option value="am">AM</option>
-                        <option value="pm">PM</option>
-                    </select>
+    <!-- Schedule Modal -->
+    <div id="adminDoctorScheduleModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 items-center justify-center p-4">
+        <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.24)]">
+            <div class="sticky top-0 bg-white px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-3 z-10">
+                <div>
+                    <div class="text-sm font-semibold text-slate-900" id="adminDoctorScheduleTitle">Manage Schedule</div>
+                    <div class="text-[0.72rem] text-slate-500">Add time slots and view existing schedules.</div>
                 </div>
-            </div>
-            <div>
-                <label class="block text-[0.7rem] text-slate-600 mb-1">End time</label>
-                <div class="grid grid-cols-3 gap-1">
-                    <select id="admin_schedule_end_hour" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                        <option value="">HH</option>
-                        @for ($h = 1; $h <= 12; $h++)
-                            <option value="{{ $h }}">{{ $h }}</option>
-                        @endfor
-                    </select>
-                    <select id="admin_schedule_end_min" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                        <option value="">MM</option>
-                        <option value="00">00</option>
-                        <option value="15">15</option>
-                        <option value="30">30</option>
-                        <option value="45">45</option>
-                    </select>
-                    <select id="admin_schedule_end_ampm" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                        <option value="">AM/PM</option>
-                        <option value="am">AM</option>
-                        <option value="pm">PM</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <label for="admin_schedule_max" class="block text-[0.7rem] text-slate-600 mb-1">Max patients</label>
-                <input id="admin_schedule_max" type="number" min="1" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Optional">
-            </div>
-            <div>
-                <label for="admin_schedule_room" class="block text-[0.7rem] text-slate-600 mb-1">Room # (optional)</label>
-                <input id="admin_schedule_room" type="number" min="1" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="e.g. 101">
-            </div>
-            <input type="hidden" id="admin_schedule_slot_minutes" value="60">
-            <div class="flex items-center gap-2">
-                <button type="submit" id="adminDoctorScheduleSubmit" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-[0.78rem] font-semibold hover:bg-cyan-700 transition-colors w-full disabled:opacity-60 disabled:hover:bg-cyan-600">
-                    <span id="adminDoctorScheduleSpinner" class="hidden w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                    <span id="adminDoctorScheduleSubmitLabel">Generate schedule</span>
+                <button type="button" id="adminDoctorScheduleClose" class="text-slate-400 hover:text-slate-600">
+                    <span class="material-symbols-outlined text-[20px] leading-none">close</span>
                 </button>
             </div>
-        </form>
 
-        <div id="adminConfirmOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/40 items-center justify-center p-4">
-            <div class="w-full max-w-sm rounded-2xl bg-white border border-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.24)] p-4">
-                <div class="flex items-start gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
-                        <span class="material-symbols-outlined text-[18px] leading-none">help</span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Confirm</div>
-                        <div id="adminConfirmMessage" class="text-[0.78rem] text-slate-600 mt-0.5">Are you sure?</div>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center justify-end gap-2">
-                    <button type="button" id="adminConfirmCancel" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
-                    <button type="button" id="adminConfirmOk" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-[0.78rem] font-semibold hover:bg-slate-800">
-                        <span id="adminConfirmOkSpinner" class="hidden w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                        <span id="adminConfirmOkLabel">Confirm</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+            <div class="p-5">
+                <div id="adminDoctorError" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.75rem] text-red-700"></div>
+                <div id="adminDoctorSuccess" class="hidden mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[0.75rem] text-emerald-700"></div>
 
-        <div class="text-[0.78rem] text-slate-700">
-            <h4 class="text-xs font-semibold text-slate-900 mb-2">Existing schedules</h4>
-            <div class="mb-2 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                <div class="flex items-center gap-2">
-                    <button type="button" id="adminScheduleSelectAll" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.72rem] font-semibold text-slate-700 hover:bg-slate-50">Select all</button>
-                    <button type="button" id="adminScheduleClearAll" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.72rem] font-semibold text-slate-700 hover:bg-slate-50">Clear</button>
-                </div>
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-end">
-                    <div class="w-full sm:w-40">
-                        <label for="adminScheduleBulkDay" class="block text-[0.7rem] text-slate-600 mb-1">Day</label>
-                        <select id="adminScheduleBulkDay" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                            <option value="">Select day</option>
+                <form id="adminDoctorScheduleForm" class="mb-5 grid gap-3 grid-cols-1 md:grid-cols-6 items-end">
+                    <div>
+                        <label for="admin_schedule_from_day" class="block text-[0.7rem] text-slate-600 mb-1">From day</label>
+                        <select id="admin_schedule_from_day" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                            <option value="">Select</option>
                             <option value="mon">Mon</option>
                             <option value="tue">Tue</option>
                             <option value="wed">Wed</option>
@@ -191,23 +78,103 @@
                             <option value="sun">Sun</option>
                         </select>
                     </div>
-                    <div class="flex items-center gap-2">
-                         <button type="button" id="adminScheduleDeleteDay" class="px-3 py-2 rounded-xl bg-rose-600 text-white text-[0.72rem] font-semibold hover:bg-rose-700">Delete day</button>
-                      
-                        <button type="button" id="adminScheduleDeleteSelected" class="px-3 py-2 rounded-xl bg-rose-600 text-white text-[0.72rem] font-semibold hover:bg-rose-700">Delete selected</button>
-                       
+                    <div>
+                        <label for="admin_schedule_to_day" class="block text-[0.7rem] text-slate-600 mb-1">To day</label>
+                        <select id="admin_schedule_to_day" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                            <option value="">Select</option>
+                            <option value="mon">Mon</option>
+                            <option value="tue">Tue</option>
+                            <option value="wed">Wed</option>
+                            <option value="thu">Thu</option>
+                            <option value="fri">Fri</option>
+                            <option value="sat">Sat</option>
+                            <option value="sun">Sun</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="admin_schedule_start_time" class="block text-[0.7rem] text-slate-600 mb-1">Start time</label>
+                        <input type="time" id="admin_schedule_start_time" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" step="900">
+                    </div>
+                    <div>
+                        <label for="admin_schedule_end_time" class="block text-[0.7rem] text-slate-600 mb-1">End time</label>
+                        <input type="time" id="admin_schedule_end_time" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" step="900">
+                    </div>
+                    <div>
+                        <label for="admin_schedule_max" class="block text-[0.7rem] text-slate-600 mb-1">Max patients</label>
+                        <input id="admin_schedule_max" type="number" min="1" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Optional">
+                    </div>
+                    <div>
+                        <label for="admin_schedule_room" class="block text-[0.7rem] text-slate-600 mb-1">Room # (optional)</label>
+                        <input id="admin_schedule_room" type="number" min="1" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="e.g. 101">
+                    </div>
+                    <input type="hidden" id="admin_schedule_slot_minutes" value="60">
+                    <div class="md:col-span-6">
+                        <button type="submit" id="adminDoctorScheduleSubmit" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-[0.78rem] font-semibold hover:bg-cyan-700 transition-colors w-full md:w-auto disabled:opacity-60">
+                            <span id="adminDoctorScheduleSpinner" class="hidden w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                            <span id="adminDoctorScheduleSubmitLabel">Generate schedule</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="border-t border-slate-100 pt-4">
+                    <h4 class="text-xs font-semibold text-slate-900 mb-3">Existing Schedules</h4>
+                    
+                    <!-- Day Filter for Deletion -->
+                    <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="adminScheduleSelectAll" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.72rem] font-semibold text-slate-700 hover:bg-slate-50">Select all</button>
+                            <button type="button" id="adminScheduleClearAll" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.72rem] font-semibold text-slate-700 hover:bg-slate-50">Clear</button>
+                            <button type="button" id="adminScheduleDeleteSelected" class="px-3 py-2 rounded-xl bg-rose-600 text-white text-[0.72rem] font-semibold hover:bg-rose-700">Delete selected</button>
+                        </div>
+                        <div class="w-full sm:w-48">
+                            <label for="adminScheduleDayFilter" class="block text-[0.7rem] text-slate-600 mb-1">Filter by day</label>
+                            <select id="adminScheduleDayFilter" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                                <option value="">All days</option>
+                                <option value="mon">Monday</option>
+                                <option value="tue">Tuesday</option>
+                                <option value="wed">Wednesday</option>
+                                <option value="thu">Thursday</option>
+                                <option value="fri">Friday</option>
+                                <option value="sat">Saturday</option>
+                                <option value="sun">Sunday</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Grouped Schedule View (by day, then time slots) -->
+                    <div id="adminDoctorScheduleList" class="space-y-3 max-h-[300px] overflow-y-auto">
+                    </div>
+
+                    <!-- Weekly Summary Grid (cleaner) -->
+                    <div class="mt-4">
+                        <h4 class="text-xs font-semibold text-slate-900 mb-2">Weekly Summary</h4>
+                        <div id="adminDoctorScheduleGrid" class="grid grid-cols-7 gap-1 text-[0.7rem]"></div>
                     </div>
                 </div>
-            </div>
-            <div id="adminDoctorScheduleList" class="space-y-2 text-[0.78rem] text-slate-700">
-            </div>
-            <div class="mt-4">
-                <h4 class="text-xs font-semibold text-slate-900 mb-2">Weekly grid</h4>
-                <div id="adminDoctorScheduleGrid" class="grid grid-cols-7 gap-2 text-[0.72rem]"></div>
             </div>
         </div>
     </div>
 
+    <div id="adminConfirmOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/40 items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-2xl bg-white border border-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.24)] p-4">
+            <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
+                    <span class="material-symbols-outlined text-[18px] leading-none">help</span>
+                </div>
+                <div class="flex-1">
+                    <div class="text-sm font-semibold text-slate-900">Confirm</div>
+                    <div id="adminConfirmMessage" class="text-[0.78rem] text-slate-600 mt-0.5">Are you sure?</div>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center justify-end gap-2">
+                <button type="button" id="adminConfirmCancel" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+                <button type="button" id="adminConfirmOk" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-[0.78rem] font-semibold hover:bg-slate-800">
+                    <span id="adminConfirmOkSpinner" class="hidden w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                    <span id="adminConfirmOkLabel">Confirm</span>
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="adminDoctorAvailabilityOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/40 items-center justify-center p-4">
         <div class="w-full max-w-2xl rounded-2xl bg-white border border-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.24)] overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-3">
@@ -362,13 +329,9 @@
         var scheduleSubmit = document.getElementById('adminDoctorScheduleSubmit')
         var scheduleSpinner = document.getElementById('adminDoctorScheduleSpinner')
         var scheduleSubmitLabel = document.getElementById('adminDoctorScheduleSubmitLabel')
-        var scheduleSelectAll = document.getElementById('adminScheduleSelectAll')
+          var scheduleSelectAll = document.getElementById('adminScheduleSelectAll')
         var scheduleClearAll = document.getElementById('adminScheduleClearAll')
-        var scheduleBulkDay = document.getElementById('adminScheduleBulkDay')
         var scheduleDeleteSelected = document.getElementById('adminScheduleDeleteSelected')
-        var scheduleDeleteDay = document.getElementById('adminScheduleDeleteDay')
-        var scheduleDeleteAll = document.getElementById('adminScheduleDeleteAll')
-
         var availabilityOverlay = document.getElementById('adminDoctorAvailabilityOverlay')
         var availabilityTitle = document.getElementById('adminDoctorAvailabilityTitle')
         var availabilityClose = document.getElementById('adminDoctorAvailabilityClose')
@@ -1057,7 +1020,6 @@
                     openDoctorEditModal(doctor)
                 })
             })
-
             var scheduleButtons = tableBody.querySelectorAll('.admin-doctor-schedule')
             scheduleButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
@@ -1065,24 +1027,28 @@
                     var name = this.getAttribute('data-doctor-name') || ''
                     currentDoctorIdForSchedule = id
                     currentScheduleId = null
-                    if (scheduleStartHour) scheduleStartHour.value = ''
-                    if (scheduleStartMin) scheduleStartMin.value = ''
-                    if (scheduleStartAmPm) scheduleStartAmPm.value = ''
-                    if (scheduleEndHour) scheduleEndHour.value = ''
-                    if (scheduleEndMin) scheduleEndMin.value = ''
-                    if (scheduleEndAmPm) scheduleEndAmPm.value = ''
+                    
+                    if (document.getElementById('admin_schedule_start_time')) document.getElementById('admin_schedule_start_time').value = ''
+                    if (document.getElementById('admin_schedule_end_time')) document.getElementById('admin_schedule_end_time').value = ''
                     if (scheduleMax) scheduleMax.value = ''
                     if (scheduleFromDay) scheduleFromDay.value = ''
                     if (scheduleToDay) scheduleToDay.value = ''
+                    if (scheduleSubmitLabel) scheduleSubmitLabel.textContent = 'Generate schedule'
+                    
                     showDoctorError('')
                     showDoctorSuccess('')
                     setScheduleSubmitting(false)
+                    
                     if (scheduleTitle) {
                         scheduleTitle.textContent = 'Manage Schedule — ' + name
                     }
-                    if (schedulePanel) {
-                        schedulePanel.classList.remove('hidden')
+                    
+                    var modal = document.getElementById('adminDoctorScheduleModal')
+                    if (modal) {
+                        modal.classList.remove('hidden')
+                        modal.classList.add('flex')
                     }
+                    
                     loadSchedulesForDoctor(id)
                 })
             })
@@ -1100,120 +1066,49 @@
             })
         }
 
-        function loadSchedulesForDoctor(doctorId) {
-            if (!scheduleList || !doctorId) return
-            scheduleList.innerHTML = 'Loading schedules…'
-            if (scheduleGrid) {
-                scheduleGrid.innerHTML = ''
-            }
-            currentScheduleId = null
+           function wireScheduleBulkActions(doctorId) {
+            if (!scheduleList) return
 
-            fetchAllDoctorSchedules(doctorId, function (all) {
-                loadedSchedules = Array.isArray(all) ? all : []
-                    if (!loadedSchedules.length) {
-                        scheduleList.textContent = 'No schedules defined yet for this doctor.'
-                        if (scheduleGrid) {
-                            scheduleGrid.innerHTML = ''
-                        }
+            // Day filter change listener
+            var dayFilter = document.getElementById('adminScheduleDayFilter')
+            if (dayFilter) {
+                dayFilter.onchange = function() {
+                    renderGroupedSchedules()
+                }
+            }
+
+            if (scheduleSelectAll) {
+                scheduleSelectAll.onclick = function() {
+                    var checks = scheduleList.querySelectorAll('.admin-schedule-check')
+                    checks.forEach(function(c) { c.checked = true })
+                }
+            }
+            if (scheduleClearAll) {
+                scheduleClearAll.onclick = function() {
+                    var checks = scheduleList.querySelectorAll('.admin-schedule-check')
+                    checks.forEach(function(c) { c.checked = false })
+                }
+            }
+            if (scheduleDeleteSelected) {
+                scheduleDeleteSelected.onclick = function() {
+                    showDoctorError('')
+                    showDoctorSuccess('')
+                    var ids = getCheckedScheduleIds()
+                    if (!ids.length) {
+                        showDoctorError('Select at least one schedule.')
                         return
                     }
-
-                    var html = ''
-                    var dayLabels = {
-                        mon: 'Mon',
-                        tue: 'Tue',
-                        wed: 'Wed',
-                        thu: 'Thu',
-                        fri: 'Fri',
-                        sat: 'Sat',
-                        sun: 'Sun'
-                    }
-                    loadedSchedules.forEach(function (s) {
-                        var dayKey = s && s.day_of_week ? String(s.day_of_week).toLowerCase() : ''
-                        var day = dayLabels[dayKey] || (dayKey ? dayKey.toUpperCase() : '—')
-                        var startLabel = formatTimeLabel(s.start_time || '')
-                        var endLabel = formatTimeLabel(s.end_time || '')
-                        var avail = s && s.is_available === false ? 'Unavailable' : 'Available'
-                        var availClass = s && s.is_available === false ? 'text-rose-700 bg-rose-50 border-rose-100' : 'text-emerald-700 bg-emerald-50 border-emerald-100'
-                        var roomLabel = (s.room_number != null && String(s.room_number) !== '') ? String(s.room_number) : '—'
-                        html += '<div class="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">' +
-                            '<div class="text-[0.78rem] text-slate-700">' +
-                            '<div class="flex items-center gap-2 flex-wrap">' +
-                                '<div><span class="font-semibold">Day:</span> ' + day + '</div>' +
-                                '<div class="inline-flex items-center px-2 py-0.5 rounded-full text-[0.68rem] font-semibold border ' + availClass + '">' + avail + '</div>' +
-                            '</div>' +
-                            '<div><span class="font-semibold">Time:</span> ' + (startLabel || (s.start_time || '')) + '–' + (endLabel || (s.end_time || '')) + '</div>' +
-                            '<div><span class="font-semibold">Max patients:</span> ' + (s.max_patients || '—') + '</div>' +
-                            '<div><span class="font-semibold">Room:</span> ' + roomLabel + '</div>' +
-                            '</div>' +
-                            '<div class="flex items-center gap-2">' +
-                                '<input type="checkbox" class="admin-schedule-check w-4 h-4 accent-cyan-600" data-schedule-id="' + s.schedule_id + '">' +
-                                '<button type="button" class="text-[0.72rem] text-cyan-700 hover:text-cyan-800 font-semibold admin-schedule-edit" data-schedule-id="' + s.schedule_id + '">Edit</button>' +
-                                '<button type="button" class="text-[0.72rem] text-rose-600 hover:text-rose-700 font-semibold admin-schedule-delete" data-schedule-id="' + s.schedule_id + '">Delete</button>' +
-                            '</div>' +
-                            '</div>'
-                    })
-                    scheduleList.innerHTML = html
-
-                    renderScheduleGrid(loadedSchedules)
-                    wireScheduleBulkActions(doctorId)
-
-                    var editButtons = scheduleList.querySelectorAll('.admin-schedule-edit')
-                    editButtons.forEach(function (button) {
-                        button.addEventListener('click', function () {
-                            var scheduleId = this.getAttribute('data-schedule-id')
-                            var schedule = loadedSchedules.find(function (s) { return String(s.schedule_id) === String(scheduleId) })
-                            if (!schedule) return
-                            currentScheduleId = schedule.schedule_id
-                            set12HourSelects('start', schedule.start_time || '')
-                            set12HourSelects('end', schedule.end_time || '')
-                            if (scheduleMax) scheduleMax.value = schedule.max_patients || ''
-                            if (scheduleRoom) scheduleRoom.value = schedule.room_number != null ? String(schedule.room_number) : ''
-                            if (scheduleFromDay) scheduleFromDay.value = schedule.day_of_week || ''
-                            if (scheduleToDay) scheduleToDay.value = schedule.day_of_week || ''
-                            setScheduleSubmitting(false)
+                    confirmAction('Delete ' + ids.length + ' selected schedule(s)?', { countdownSeconds: 3, confirmText: 'Delete' })
+                        .then(function(confirmed) {
+                            if (!confirmed) return
+                            bulkDeleteSchedules({ doctor_id: parseInt(doctorId, 10), schedule_ids: ids }, 'Selected schedules deleted.')
                         })
-                    })
-
-                    var deleteButtons = scheduleList.querySelectorAll('.admin-schedule-delete')
-                    deleteButtons.forEach(function (button) {
-                        button.addEventListener('click', function () {
-                            var scheduleId = this.getAttribute('data-schedule-id')
-                            if (!scheduleId) return
-                            showDoctorError('')
-                            showDoctorSuccess('')
-
-                            confirmAction('Delete this schedule?', { countdownSeconds: 3, confirmText: 'Delete' })
-                                .then(function (confirmed) {
-                                    if (!confirmed) return
-                                    apiFetch(apiUrl('/api/doctor-schedules') + "/" + scheduleId, {
-                                        method: 'DELETE'
-                                    })
-                                        .then(function (response) {
-                                            return readResponse(response)
-                                        })
-                                        .then(function (result) {
-                                            if (!result.ok) {
-                                                var msg = (result.data && result.data.message) ? result.data.message : 'Failed to delete schedule.'
-                                                if (!result.data && result.raw) {
-                                                    msg = 'Failed to delete schedule.'
-                                                }
-                                                showDoctorError(msg)
-                                                return
-                                            }
-                                            showDoctorSuccess('Schedule deleted.')
-                                            loadSchedulesForDoctor(doctorId)
-                                        })
-                                        .catch(function () {
-                                            showDoctorError('Network error while deleting schedule.')
-                                        })
-                                })
-                        })
-                    })
-            }, function (message) {
+                }
+            }
+        }, function (message) {
                 scheduleList.textContent = message || 'Failed to load schedules.'
             })
-        }
+        
 
         function setBulkDeleting(isDeleting) {
             var buttons = [scheduleSelectAll, scheduleClearAll, scheduleDeleteSelected, scheduleDeleteDay, scheduleDeleteAll]
@@ -1559,26 +1454,26 @@
             })
         }
 
-        if (scheduleClose && schedulePanel) {
+              if (scheduleClose) {
             scheduleClose.addEventListener('click', function () {
-                schedulePanel.classList.add('hidden')
+                var modal = document.getElementById('adminDoctorScheduleModal')
+                if (modal) {
+                    modal.classList.add('hidden')
+                    modal.classList.remove('flex')
+                }
                 currentDoctorIdForSchedule = null
                 currentScheduleId = null
-                if (scheduleStartHour) scheduleStartHour.value = ''
-                if (scheduleStartMin) scheduleStartMin.value = ''
-                if (scheduleStartAmPm) scheduleStartAmPm.value = ''
-                if (scheduleEndHour) scheduleEndHour.value = ''
-                if (scheduleEndMin) scheduleEndMin.value = ''
-                if (scheduleEndAmPm) scheduleEndAmPm.value = ''
+                if (document.getElementById('admin_schedule_start_time')) document.getElementById('admin_schedule_start_time').value = ''
+                if (document.getElementById('admin_schedule_end_time')) document.getElementById('admin_schedule_end_time').value = ''
                 if (scheduleMax) scheduleMax.value = ''
                 if (scheduleRoom) scheduleRoom.value = ''
                 if (scheduleFromDay) scheduleFromDay.value = ''
                 if (scheduleToDay) scheduleToDay.value = ''
+                if (scheduleSubmitLabel) scheduleSubmitLabel.textContent = 'Generate schedule'
                 showDoctorError('')
                 showDoctorSuccess('')
             })
         }
-
         if (scheduleForm) {
             scheduleForm.addEventListener('submit', function (e) {
                 e.preventDefault()
@@ -1589,16 +1484,8 @@
                 showDoctorError('')
                 showDoctorSuccess('')
 
-                var start = to24Hour(
-                    scheduleStartHour ? scheduleStartHour.value : '',
-                    scheduleStartMin ? scheduleStartMin.value : '',
-                    scheduleStartAmPm ? scheduleStartAmPm.value : ''
-                )
-                var end = to24Hour(
-                    scheduleEndHour ? scheduleEndHour.value : '',
-                    scheduleEndMin ? scheduleEndMin.value : '',
-                    scheduleEndAmPm ? scheduleEndAmPm.value : ''
-                )
+                var start = document.getElementById('admin_schedule_start_time') ? document.getElementById('admin_schedule_start_time').value : ''
+                var end = document.getElementById('admin_schedule_end_time') ? document.getElementById('admin_schedule_end_time').value : ''
                 var maxPatients = scheduleMax ? scheduleMax.value : ''
                 var roomNumberRaw = scheduleRoom ? String(scheduleRoom.value || '').trim() : ''
                 var fromDay = scheduleFromDay ? String(scheduleFromDay.value || '') : ''
@@ -1613,6 +1500,12 @@
                     return
                 }
 
+                if (end <= start) {
+                    showDoctorError('End time must be after start time.')
+                    return
+                }
+
+                // Calculate minutes for validation
                 var startMinutes = minutesFromHHMM(start)
                 var endMinutes = minutesFromHHMM(end)
                 if (isNaN(startMinutes) || isNaN(endMinutes) || endMinutes <= startMinutes) {
@@ -1689,8 +1582,6 @@
                                 if (all.length) {
                                     message = all.join(' ')
                                 }
-                            } else if (!result.data && result.raw) {
-                                message = 'Failed to save schedule.'
                             } else if (result.status === 401) {
                                 message = 'Session expired. Please log in again.'
                             } else if (result.status === 403) {
@@ -1708,16 +1599,15 @@
                             successMsg = 'Slots generated. Created ' + created + ', updated ' + updated + '.'
                         }
                         showDoctorSuccess(successMsg)
-                        if (scheduleStartHour) scheduleStartHour.value = ''
-                        if (scheduleStartMin) scheduleStartMin.value = ''
-                        if (scheduleStartAmPm) scheduleStartAmPm.value = ''
-                        if (scheduleEndHour) scheduleEndHour.value = ''
-                        if (scheduleEndMin) scheduleEndMin.value = ''
-                        if (scheduleEndAmPm) scheduleEndAmPm.value = ''
+                        
+                        // Reset form
+                        if (document.getElementById('admin_schedule_start_time')) document.getElementById('admin_schedule_start_time').value = ''
+                        if (document.getElementById('admin_schedule_end_time')) document.getElementById('admin_schedule_end_time').value = ''
                         if (scheduleMax) scheduleMax.value = ''
                         if (scheduleRoom) scheduleRoom.value = ''
                         if (scheduleFromDay) scheduleFromDay.value = ''
                         if (scheduleToDay) scheduleToDay.value = ''
+                        if (scheduleSubmitLabel) scheduleSubmitLabel.textContent = 'Generate schedule'
                         currentScheduleId = null
                         loadSchedulesForDoctor(currentDoctorIdForSchedule)
                         loadDoctors()
@@ -1730,70 +1620,64 @@
                     })
             })
         }
-
         function renderScheduleGrid(schedules) {
             if (!scheduleGrid) return
+            
             var dayOrder = [
-                { key: 'mon', label: 'Mon' },
-                { key: 'tue', label: 'Tue' },
-                { key: 'wed', label: 'Wed' },
-                { key: 'thu', label: 'Thu' },
-                { key: 'fri', label: 'Fri' },
-                { key: 'sat', label: 'Sat' },
-                { key: 'sun', label: 'Sun' }
+                { key: 'mon', label: 'M' },
+                { key: 'tue', label: 'T' },
+                { key: 'wed', label: 'W' },
+                { key: 'thu', label: 'T' },
+                { key: 'fri', label: 'F' },
+                { key: 'sat', label: 'S' },
+                { key: 'sun', label: 'S' }
             ]
-            if (!Array.isArray(dayOrder)) dayOrder = []
 
-            var slotsByDay = {}
+            // Build a simple summary per day
+            var summaryByDay = {}
             for (var i = 0; i < dayOrder.length; i++) {
-                slotsByDay[dayOrder[i].key] = []
+                summaryByDay[dayOrder[i].key] = { count: 0, earliest: null, latest: null }
             }
 
-            var inputSchedules = Array.isArray(schedules) ? schedules : []
-            for (var s = 0; s < inputSchedules.length; s++) {
-                var slot = inputSchedules[s]
-                var key = slot && slot.day_of_week ? String(slot.day_of_week).toLowerCase() : null
-                if (!key || !slotsByDay[key]) continue
-                slotsByDay[key].push({
-                    start: (slot.start_time || '').slice(0, 5),
-                    end: (slot.end_time || '').slice(0, 5),
-                    max: slot.max_patients || null,
-                    available: slot.is_available !== false
-                })
-            }
-
-            for (var j = 0; j < dayOrder.length; j++) {
-                var dayKey = dayOrder[j].key
-                slotsByDay[dayKey].sort(function (a, b) {
-                    if (a.start < b.start) return -1
-                    if (a.start > b.start) return 1
-                    return 0
-                })
+            for (var s = 0; s < schedules.length; s++) {
+                var slot = schedules[s]
+                var day = slot && slot.day_of_week ? String(slot.day_of_week).toLowerCase() : ''
+                if (day && summaryByDay[day]) {
+                    summaryByDay[day].count++
+                    var start = (slot.start_time || '').slice(0, 5)
+                    var end = (slot.end_time || '').slice(0, 5)
+                    if (!summaryByDay[day].earliest || start < summaryByDay[day].earliest) {
+                        summaryByDay[day].earliest = start
+                    }
+                    if (!summaryByDay[day].latest || end > summaryByDay[day].latest) {
+                        summaryByDay[day].latest = end
+                    }
+                }
             }
 
             scheduleGrid.innerHTML = ''
             for (var k = 0; k < dayOrder.length; k++) {
                 var d = dayOrder[k]
+                var data = summaryByDay[d.key]
                 var col = document.createElement('div')
-                col.className = 'rounded-xl border border-slate-200 bg-white p-2'
-                var header = '<div class="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">' + d.label + '</div>'
-                var items = slotsByDay[d.key].map(function (s) {
-                    var boxClass = s.available ? 'bg-slate-50 border-slate-200/70' : 'bg-rose-50 border-rose-100'
-                    var status = s.available ? '' : '<div class="text-[0.68rem] font-semibold text-rose-700">Unavailable</div>'
-                    return '<div class="rounded-lg px-2 py-1 border mb-1 ' + boxClass + '">' +
-                        '<div class="text-[0.74rem] font-semibold text-slate-700">' + s.start + '–' + s.end + '</div>' +
-                        '<div class="text-[0.68rem] text-slate-500">Max: ' + (s.max ? s.max : '—') + '</div>' +
-                        status +
-                        '</div>'
-                }).join('')
-                if (!items) {
-                    items = '<div class="text-[0.72rem] text-slate-400">—</div>'
+                col.className = 'rounded-lg border border-slate-200 bg-white p-2 text-center'
+                
+                var timeText = ''
+                if (data.count > 0) {
+                    var startShort = data.earliest ? formatTimeCompact(data.earliest) : ''
+                    var endShort = data.latest ? formatTimeCompact(data.latest) : ''
+                    timeText = '<div class="text-[0.65rem] text-slate-600 mt-1">' + startShort + '-' + endShort + '</div>'
+                } else {
+                    timeText = '<div class="text-[0.65rem] text-slate-400 mt-1">—</div>'
                 }
-                col.innerHTML = header + items
+                
+                col.innerHTML = '<div class="text-[0.68rem] font-semibold text-slate-500">' + d.label + '</div>' +
+                                '<div class="text-[0.7rem] font-bold text-slate-700">' + data.count + '</div>' +
+                                timeText
                 scheduleGrid.appendChild(col)
             }
         }
 
         loadDoctors()
-    })
+    
 </script>
