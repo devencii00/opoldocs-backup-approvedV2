@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('services', \App\Http\Controllers\ServiceController::class);
     Route::apiResource('prescription-items', \App\Http\Controllers\PrescriptionItemController::class);
     Route::apiResource('medical-backgrounds', MedicalBackgroundController::class);
+    Route::get('/vitals', [PatientController::class, 'vitals']);
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{notification}', [NotificationController::class, 'update']);

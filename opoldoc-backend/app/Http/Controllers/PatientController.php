@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Mail\StaffInviteMail;
+use App\Models\LogEntry;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -332,5 +334,53 @@ class PatientController extends Controller
         ]);
 
         return $dependent->refresh();
+    }
+
+    public function vitals(Request $request)
+    {
+        $currentUser = $request->user();
+        if ($currentUser && $currentUser->role === 'patient') {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'patient_id' => ['required', 'integer', 'exists:users,user_id'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $perPage = (int) ($data['per_page'] ?? 50);
+        if ($perPage < 1) {
+            $perPage = 50;
+        }
+        if ($perPage > 100) {
+            $perPage = 100;
+        }
+
+        $patientId = (int) $data['patient_id'];
+
+        LogEntry::write(
+            $currentUser ? (int) $currentUser->user_id : null,
+            'access_patient_vitals',
+            'patients',
+            $patientId,
+            [],
+            120
+        );
+
+        return DB::table('vitals')
+            ->where('vitals.patient_id', $patientId)
+            ->leftJoin('appointments', 'vitals.appointment_id', '=', 'appointments.appointment_id')
+            ->leftJoin('users as doctors', 'appointments.doctor_id', '=', 'doctors.user_id')
+            ->select([
+                'vitals.*',
+                'appointments.appointment_datetime',
+                'appointments.doctor_id',
+                'doctors.firstname as doctor_firstname',
+                'doctors.middlename as doctor_middlename',
+                'doctors.lastname as doctor_lastname',
+            ])
+            ->orderByDesc('vitals.recorded_at')
+            ->orderByDesc('vitals.vital_id')
+            ->paginate($perPage);
     }
 }

@@ -100,6 +100,7 @@
                             $dateKey = $queue->queue_datetime ? $queue->queue_datetime->format('Y-m-d H:i') : '';
                             $queueId = $queue->queue_id ?? null;
                             $priority = (int) ($queue->priority_level ?? 5);
+                            $waitMinutes = $queue->queue_datetime ? $queue->queue_datetime->diffInMinutes(now()) : 0;
                         @endphp
                         <tr class="border-b border-slate-50 last:border-0 reception-queue-row"
                             data-queue-number="{{ $queue->queue_number }}"
@@ -134,7 +135,7 @@
                             <td class="py-2 pr-4 text-[0.78rem] text-slate-500">
                                 @if ($statusName)
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.68rem] font-medium border bg-slate-50 border-slate-100 text-slate-700">
-                                        {{ ucfirst($statusName) }}
+                                        {{ ucfirst(str_replace('_', ' ', $statusName)) }}
                                     </span>
                                 @else
                                     <span class="text-[0.7rem] text-slate-400">—</span>
@@ -142,29 +143,43 @@
                             </td>
                             <td class="py-2 pr-4 text-[0.78rem] text-right text-slate-500">
                                 @if ($queueId ?? null)
-                                    <div class="inline-flex items-center gap-1.5">
-                                        @if (strtolower($statusName) !== 'serving')
-                                            <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-slate-50 reception-queue-status" data-queue-id="{{ $queueId }}" data-status="serving">
-                                                <span class="material-symbols-outlined text-[16px] leading-none">play_arrow</span>
-                                                Serving
-                                            </button>
-                                        @else
-                                            <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2 py-1 text-[0.7rem] text-emerald-700 hover:bg-emerald-50 reception-queue-status" data-queue-id="{{ $queueId }}" data-status="done">
-                                                <span class="material-symbols-outlined text-[16px] leading-none">check</span>
-                                                Done
-                                            </button>
-                                        @endif
+                                    @if (in_array(strtolower($statusName), ['done', 'cancelled', 'no_show'], true))
+                                        <span class="text-[0.7rem] text-slate-400">—</span>
+                                    @else
+                                        <div class="inline-flex items-center gap-1.5">
+                                            @if (strtolower($statusName) !== 'serving')
+                                                <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-slate-50 reception-queue-status" data-queue-id="{{ $queueId }}" data-status="serving">
+                                                    <span class="material-symbols-outlined text-[16px] leading-none">play_arrow</span>
+                                                    Serving
+                                                </button>
+                                                @if (strtolower($statusName) === 'waiting' && $waitMinutes >= 5)
+                                                    <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-[0.7rem] text-rose-700 hover:bg-rose-50 reception-queue-status" data-queue-id="{{ $queueId }}" data-status="no_show">
+                                                        <span class="material-symbols-outlined text-[16px] leading-none">person_off</span>
+                                                        No show
+                                                    </button>
+                                                @endif
+                                            @else
+                                                <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2 py-1 text-[0.7rem] text-emerald-700 hover:bg-emerald-50 reception-queue-status" data-queue-id="{{ $queueId }}" data-status="done">
+                                                    <span class="material-symbols-outlined text-[16px] leading-none">check</span>
+                                                    Done
+                                                </button>
+                                                <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-[0.7rem] text-rose-700 hover:bg-rose-50 reception-queue-status" data-queue-id="{{ $queueId }}" data-status="no_show">
+                                                    <span class="material-symbols-outlined text-[16px] leading-none">person_off</span>
+                                                    No show
+                                                </button>
+                                            @endif
 
-                                        <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-slate-50 reception-queue-config" data-queue-id="{{ $queueId }}" data-priority-level="{{ $priority }}">
-                                            <span class="material-symbols-outlined text-[16px] leading-none">settings</span>
-                                            Config
-                                        </button>
+                                            <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-slate-50 reception-queue-config" data-queue-id="{{ $queueId }}" data-priority-level="{{ $priority }}">
+                                                <span class="material-symbols-outlined text-[16px] leading-none">settings</span>
+                                                Config
+                                            </button>
 
-                                        <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 reception-queue-remove" data-queue-id="{{ $queueId }}">
-                                            <span class="material-symbols-outlined text-[16px] leading-none">close</span>
-                                            Remove
-                                        </button>
-                                    </div>
+                                            <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 reception-queue-remove" data-queue-id="{{ $queueId }}">
+                                                <span class="material-symbols-outlined text-[16px] leading-none">close</span>
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="text-[0.7rem] text-slate-400">—</span>
                                 @endif
@@ -666,8 +681,18 @@
                 var sa = String(a.getAttribute('data-status') || '').toLowerCase()
                 var sb = String(b.getAttribute('data-status') || '').toLowerCase()
 
-                if (sa === 'serving' && sb !== 'serving') return -1
-                if (sb === 'serving' && sa !== 'serving') return 1
+                function statusRank(s) {
+                    if (s === 'serving') return 0
+                    if (s === 'waiting') return 1
+                    if (s === 'no_show') return 2
+                    if (s === 'done') return 3
+                    if (s === 'cancelled') return 4
+                    return 5
+                }
+                var ra = statusRank(sa)
+                var rb = statusRank(sb)
+                if (ra < rb) return -1
+                if (ra > rb) return 1
 
                 if (value === 'priority') {
                     if (pa < pb) return -1
@@ -846,47 +871,10 @@
                     return
                 }
 
-                showQueueError('')
-                showQueueSuccess('')
-
-                if (typeof apiFetch !== 'function') {
-                    showQueueError('API client is not available.')
-                    return
-                }
-
-                var url = "{{ url('/api/queues') }}/" + encodeURIComponent(queueId)
-
                 confirmAction('Remove queue entry', 'Are you sure you want to remove this queue entry?')
                     .then(function (confirmed) {
                         if (!confirmed) return
-
-                        apiFetch(url, { method: 'DELETE' })
-                            .then(function (response) {
-                                if (!response.ok) {
-                                    return response.json().then(function (data) {
-                                        return { ok: false, data: data }
-                                    }).catch(function () {
-                                        return { ok: false, data: null }
-                                    })
-                                }
-                                return { ok: true, data: null }
-                            })
-                            .then(function (result) {
-                                if (!result.ok) {
-                                    var message = 'Failed to remove queue entry.'
-                                    if (result.data && result.data.message) {
-                                        message = result.data.message
-                                    }
-                                    showQueueError(message)
-                                    return
-                                }
-
-                                showQueueSuccess('Queue entry removed.')
-                                window.location.reload()
-                            })
-                            .catch(function () {
-                                showQueueError('Network error while removing queue entry.')
-                            })
+                        updateQueueStatus(queueId, 'cancelled', 'Queue entry removed.')
                     })
             })
         })
@@ -945,38 +933,20 @@
                 if (!queueId || !status) {
                     return
                 }
-                if (String(status).toLowerCase() === 'done') {
-                    var url = "{{ url('/api/queues') }}/" + encodeURIComponent(queueId)
-                    confirmAction('Mark as done', 'Are you sure you want to remove this queue entry?')
+                var normalized = String(status).toLowerCase()
+                if (normalized === 'done') {
+                    confirmAction('Mark as done', 'Are you sure you want to mark this queue entry as done?')
                         .then(function (confirmed) {
                             if (!confirmed) return
-
-                            apiFetch(url, { method: 'DELETE' })
-                                .then(function (response) {
-                                    if (!response.ok) {
-                                        return response.json().then(function (data) {
-                                            return { ok: false, data: data }
-                                        }).catch(function () {
-                                            return { ok: false, data: null }
-                                        })
-                                    }
-                                    return { ok: true, data: null }
-                                })
-                                .then(function (result) {
-                                    if (!result.ok) {
-                                        var message = 'Failed to remove queue entry.'
-                                        if (result.data && result.data.message) {
-                                            message = result.data.message
-                                        }
-                                        showQueueError(message)
-                                        return
-                                    }
-                                    showQueueSuccess('Queue entry removed.')
-                                    window.location.reload()
-                                })
-                                .catch(function () {
-                                    showQueueError('Network error while updating queue.')
-                                })
+                            updateQueueStatus(queueId, status, 'Queue entry marked as done.')
+                        })
+                    return
+                }
+                if (normalized === 'no_show') {
+                    confirmAction('Mark as no-show', 'Are you sure you want to mark this queue entry as no-show?')
+                        .then(function (confirmed) {
+                            if (!confirmed) return
+                            updateQueueStatus(queueId, status, 'Queue entry marked as no-show.')
                         })
                     return
                 }

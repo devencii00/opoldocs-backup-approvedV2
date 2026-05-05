@@ -115,7 +115,7 @@
         <div id="receptionManageAppointmentError" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.75rem] text-red-700"></div>
         <div id="receptionManageAppointmentSuccess" class="hidden mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[0.75rem] text-emerald-700"></div>
 
-        <div class="grid gap-3 grid-cols-1 md:grid-cols-4 items-start mb-4">
+        <div class="grid gap-3 grid-cols-1 md:grid-cols-5 items-start mb-4">
             <div class="md:col-span-2 min-w-0">
                 <label for="receptionManageApptSearch" class="block text-[0.7rem] text-slate-600 mb-1">Search</label>
                 <input id="receptionManageApptSearch" type="text" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none" placeholder="Search by patient or doctor">
@@ -133,6 +133,17 @@
                 <select id="receptionManageSort" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
                     <option value="latest">Latest first</option>
                     <option value="oldest">Oldest first</option>
+                </select>
+            </div>
+            <div class="min-w-0">
+                <label for="receptionManageStatus" class="block text-[0.7rem] text-slate-600 mb-1">Status</label>
+                <select id="receptionManageStatus" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                    <option value="">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="no_show">No-show</option>
                 </select>
             </div>
         </div>
@@ -1913,6 +1924,7 @@ function setAppointmentTab(tab) {
         var manageServiceId = document.getElementById('receptionManageServiceId')
         var manageServiceResults = document.getElementById('receptionManageServiceResults')
         var manageSortSelect = document.getElementById('receptionManageSort')
+        var manageStatusSelect = document.getElementById('receptionManageStatus')
         var manageTableBody = document.getElementById('receptionManageAppointmentTableBody')
         var manageMeta = document.getElementById('receptionManageAppointmentMeta')
         var manageRefreshBtn = document.getElementById('receptionManageAppointmentRefresh')
@@ -1934,6 +1946,7 @@ function setAppointmentTab(tab) {
             if (manageSearchInput) manageSearchInput.disabled = disabled
             if (manageServiceSearch) manageServiceSearch.disabled = disabled
             if (manageSortSelect) manageSortSelect.disabled = disabled
+            if (manageStatusSelect) manageStatusSelect.disabled = disabled
             if (manageRefreshBtn) manageRefreshBtn.disabled = disabled
         }
 
@@ -2107,6 +2120,32 @@ function setAppointmentTab(tab) {
             var statusBadge = statusLabel
                 ? ('<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[0.68rem] border border-slate-200 bg-slate-50 text-slate-700">' + escapeHtml(statusLabel) + '</span>')
                 : ''
+
+            var statusKey = String(appt && appt.status ? appt.status : '').toLowerCase()
+            var canAct = statusKey === 'pending' || statusKey === 'confirmed'
+            var canCheckIn = statusKey === 'confirmed' && !(appt && appt.check_in_time)
+            var canComplete = statusKey === 'confirmed'
+            var canCancel = statusKey === 'pending' || statusKey === 'confirmed'
+
+            var actions = ''
+            if (canAct) {
+                if (canCheckIn) {
+                    actions += '<button type="button" data-action="check_in" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold">Check-in</button>'
+                }
+                if (canComplete) {
+                    actions += '<button type="button" data-action="complete" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold">Complete</button>'
+                }
+                if (canCancel) {
+                    actions += '<button type="button" data-action="cancel" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-semibold">Cancel</button>'
+                }
+            }
+
+            if (!actions) {
+                actions = '<span class="text-slate-400">—</span>'
+            } else {
+                actions = '<div class="inline-flex items-center gap-1">' + actions + '</div>'
+            }
+
             return (
                 '<tr data-appointment-id="' + escapeHtml(id) + '">' +
                     '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(when.date || '—') + statusBadge + '</td>' +
@@ -2117,12 +2156,7 @@ function setAppointmentTab(tab) {
                     '<td class="px-3 py-2 text-slate-700 min-w-[14rem] whitespace-nowrap">' + escapeHtml(serviceText) + '</td>' +
                     '<td class="px-3 py-2 text-slate-700 min-w-[12rem] whitespace-nowrap">' + escapeHtml(doctorName) + '</td>' +
                     '<td class="px-3 py-2 text-right whitespace-nowrap">' +
-                        '<div class="inline-flex items-center gap-1">' +
-                           
-                            '<button type="button" data-action="check_in" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold">Check-in</button>' +
-                            '<button type="button" data-action="complete" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold">Complete</button>' +
-                            '<button type="button" data-action="cancel" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-semibold">Cancel</button>' +
-                        '</div>' +
+                        actions +
                     '</td>' +
                 '</tr>'
             )
@@ -2201,15 +2235,24 @@ function setAppointmentTab(tab) {
             showManageResult(null)
             setManageSubmitting(true)
 
-            var url = "{{ url('/api/appointments') }}" + '?per_page=10&status=confirmed&appointment_type=scheduled'
+            var url = "{{ url('/api/appointments') }}" + '?per_page=100&appointment_type=scheduled'
             var order = manageSortSelect && manageSortSelect.value ? String(manageSortSelect.value) : 'latest'
             url += '&order=' + encodeURIComponent(order === 'oldest' ? 'oldest' : 'latest')
+
+            var now = new Date()
+            var start = new Date(now.getFullYear(), now.getMonth(), 1)
+            var end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+            url += '&start_date=' + encodeURIComponent(start.toISOString().slice(0, 10))
+            url += '&end_date=' + encodeURIComponent(end.toISOString().slice(0, 10))
 
             var search = manageSearchInput ? normalizeText(manageSearchInput.value) : ''
             if (search) url += '&search=' + encodeURIComponent(search)
 
             var serviceId = manageServiceId && manageServiceId.value ? parseInt(manageServiceId.value, 10) : 0
             if (serviceId) url += '&service_id=' + encodeURIComponent(serviceId)
+
+            var statusFilter = manageStatusSelect && manageStatusSelect.value ? String(manageStatusSelect.value) : ''
+            if (statusFilter) url += '&status=' + encodeURIComponent(statusFilter)
 
             apiFetch(url, { method: 'GET' })
                 .then(function (response) { return readResponse(response) })
@@ -2221,8 +2264,40 @@ function setAppointmentTab(tab) {
                         return
                     }
                     var raw = result.data && Array.isArray(result.data.data) ? result.data.data : (Array.isArray(result.data) ? result.data : [])
-                    renderManageAppointments(raw || [])
-                    if (manageMeta) manageMeta.textContent = 'Showing latest 10 booked appointments.'
+                    var rows = Array.isArray(raw) ? raw.slice() : []
+
+                    function statusRank(appt) {
+                        var s = String(appt && appt.status ? appt.status : '').toLowerCase()
+                        if (s === 'cancelled') return 3
+                        if (s === 'completed') return 2
+                        if (s === 'no_show') return 1
+                        return 0
+                    }
+
+                    rows.sort(function (a, b) {
+                        var ra = statusRank(a)
+                        var rb = statusRank(b)
+                        if (ra < rb) return -1
+                        if (ra > rb) return 1
+
+                        var da = a && a.appointment_datetime ? String(a.appointment_datetime) : ''
+                        var db = b && b.appointment_datetime ? String(b.appointment_datetime) : ''
+                        if (order === 'oldest') {
+                            if (da < db) return -1
+                            if (da > db) return 1
+                            return 0
+                        }
+                        if (da < db) return 1
+                        if (da > db) return -1
+                        return 0
+                    })
+
+                    renderManageAppointments(rows)
+
+                    if (manageMeta) {
+                        var monthLabel = start.toISOString().slice(0, 7)
+                        manageMeta.textContent = 'Showing ' + String(rows.length) + ' appointments for ' + monthLabel + '.'
+                    }
                 })
                 .catch(function () {
                     showManageError('Network error while loading appointments.')
@@ -2274,6 +2349,11 @@ function setAppointmentTab(tab) {
 
         if (manageSortSelect) {
             manageSortSelect.addEventListener('change', function () {
+                loadManageAppointments()
+            })
+        }
+        if (manageStatusSelect) {
+            manageStatusSelect.addEventListener('change', function () {
                 loadManageAppointments()
             })
         }

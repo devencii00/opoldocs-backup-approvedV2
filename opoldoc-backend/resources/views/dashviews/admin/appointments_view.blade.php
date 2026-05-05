@@ -9,7 +9,7 @@
 
     <div id="adminAppointmentsError" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[0.75rem] text-red-700"></div>
 
-    <div class="mb-3 grid grid-cols-1 md:grid-cols-4 gap-2 md:items-end">
+    <div class="mb-3 grid grid-cols-1 md:grid-cols-5 gap-2 md:items-end">
         <div>
             <label for="admin_appt_date" class="block text-[0.7rem] text-slate-600 mb-1">Date</label>
             <input id="admin_appt_date" type="date" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
@@ -29,6 +29,13 @@
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="no_show">No-show</option>
+            </select>
+        </div>
+        <div>
+            <label for="admin_appt_sort" class="block text-[0.7rem] text-slate-600 mb-1">Sort</label>
+            <select id="admin_appt_sort" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
+                <option value="newest" selected>Newest first</option>
+                <option value="oldest">Oldest first</option>
             </select>
         </div>
         <div>
@@ -67,6 +74,7 @@
         var dateInput = document.getElementById('admin_appt_date')
         var doctorSelect = document.getElementById('admin_appt_doctor')
         var statusSelect = document.getElementById('admin_appt_status')
+        var sortSelect = document.getElementById('admin_appt_sort')
         var searchInput = document.getElementById('admin_appt_search')
         var tableBody = document.getElementById('admin_appt_table_body')
 
@@ -175,6 +183,7 @@
             var selectedDate = dateInput ? dateInput.value : ''
             var selectedDoctor = doctorSelect ? doctorSelect.value : ''
             var selectedStatus = statusSelect ? statusSelect.value : ''
+            var selectedSort = sortSelect ? sortSelect.value : 'newest'
             var query = searchInput ? searchInput.value.toLowerCase().trim() : ''
 
             var filtered = appointments.slice()
@@ -205,8 +214,13 @@
             filtered.sort(function (a, b) {
                 var da = a.appointment_datetime || ''
                 var db = b.appointment_datetime || ''
-                if (da < db) return -1
-                if (da > db) return 1
+                if (selectedSort === 'oldest') {
+                    if (da < db) return -1
+                    if (da > db) return 1
+                    return 0
+                }
+                if (da < db) return 1
+                if (da > db) return -1
                 return 0
             })
 
@@ -236,6 +250,7 @@
         if (dateInput) dateInput.addEventListener('change', renderAppointments)
         if (doctorSelect) doctorSelect.addEventListener('change', renderAppointments)
         if (statusSelect) statusSelect.addEventListener('change', renderAppointments)
+        if (sortSelect) sortSelect.addEventListener('change', renderAppointments)
         if (searchInput) searchInput.addEventListener('input', renderAppointments)
 
         loadDoctors()

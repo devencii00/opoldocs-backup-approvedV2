@@ -140,6 +140,41 @@ class Queue extends Model
         return $candidate;
     }
 
+    public static function basePriorityScore(?int $priorityLevel): int
+    {
+        $level = self::sanitizePriorityLevel($priorityLevel) ?? 5;
+        $base = (6 - $level) * 1000;
+        return max(0, (int) $base);
+    }
+
+    public static function waitScoreWeight(): int
+    {
+        $weight = (int) env('QUEUE_WAIT_SCORE_WEIGHT', 1);
+        if ($weight < 0) {
+            $weight = 0;
+        }
+        if ($weight > 60) {
+            $weight = 60;
+        }
+        return $weight;
+    }
+
+    public function totalScore($now = null): int
+    {
+        $base = self::basePriorityScore($this->priority_level ?? 5);
+        $weight = self::waitScoreWeight();
+
+        $waited = 0;
+        try {
+            $ref = $now ?: now();
+            $waited = $this->queue_datetime ? max(0, (int) $this->queue_datetime->diffInMinutes($ref)) : 0;
+        } catch (\Throwable $e) {
+            $waited = 0;
+        }
+
+        return $base + ($waited * $weight);
+    }
+
     public function appointment()
     {
         return $this->belongsTo(Appointment::class, 'appointment_id', 'appointment_id');

@@ -55,13 +55,6 @@
                     </div>
                 </div>
 
-                <div class="mt-5 border-t border-slate-100 pt-4">
-                    <div class="flex items-center justify-between">
-                        <div class="text-xs font-semibold text-slate-700">Needs attention</div>
-                        <div id="receptionNeedsAttentionMeta" class="text-[0.68rem] text-slate-400"></div>
-                    </div>
-                    <ul id="receptionNeedsAttention" class="mt-2 space-y-1 text-[0.8rem] text-slate-700"></ul>
-                </div>
             </div>
 
             <div class="bg-white border border-slate-200 rounded-[18px] p-5 shadow-[0_2px_10px_rgba(15,23,42,0.04)] flex flex-col h-full">
@@ -103,15 +96,12 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                var list = document.getElementById('receptionNeedsAttention')
-                var meta = document.getElementById('receptionNeedsAttentionMeta')
                 var nextApptsList = document.getElementById('receptionNextAppointments')
                 var nextApptsMeta = document.getElementById('receptionNextAppointmentsMeta')
                 var nextQueueList = document.getElementById('receptionNextQueue')
                 var nextQueueMeta = document.getElementById('receptionNextQueueMeta')
                 var nextQueueBtn = document.getElementById('receptionNextQueueNextBtn')
                 var nextQueueSpinner = document.getElementById('receptionNextQueueNextSpinner')
-                if (!list) return
                 if (typeof apiFetch !== 'function') return
 
                 function escapeHtml(input) {
@@ -158,22 +148,7 @@
                     }
                 }
 
-                function render(items) {
-                    if (!items.length) {
-                        list.innerHTML = '<li class="text-[0.78rem] text-slate-500">All clear right now.</li>'
-                        return
-                    }
-                    list.innerHTML = items.map(function (t) {
-                        return '<li class="flex items-start gap-2">' +
-                            '<span class="text-amber-600 text-[0.9rem] leading-none">⚠️</span>' +
-                            '<span>' + escapeHtml(t) + '</span>' +
-                        '</li>'
-                    }).join('')
-                }
-
                 function load() {
-                    list.innerHTML = '<li class="text-[0.78rem] text-slate-400">Loading…</li>'
-                    if (meta) meta.textContent = ''
                     if (nextApptsList) nextApptsList.innerHTML = '<li class="text-[0.78rem] text-slate-400">Loading…</li>'
                     if (nextQueueList) nextQueueList.innerHTML = '<li class="text-[0.78rem] text-slate-400">Loading…</li>'
                     if (nextApptsMeta) nextApptsMeta.textContent = ''
@@ -185,55 +160,21 @@
 
                     var queuesUrl = "{{ url('/api/queues') }}" + '?date=' + encodeURIComponent(today) + '&per_page=100'
                     var apptsUrl = "{{ url('/api/appointments') }}" + '?start_date=' + encodeURIComponent(today) + '&end_date=' + encodeURIComponent(today) + '&status=confirmed&per_page=100'
-                    var verifUrl = "{{ url('/api/patient-verifications-stats') }}"
 
                     Promise.all([
                         apiFetch(queuesUrl, { method: 'GET' }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) }).catch(function () { return { ok: false, data: null } }),
-                        apiFetch(apptsUrl, { method: 'GET' }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) }).catch(function () { return { ok: false, data: null } }),
-                        apiFetch(verifUrl, { method: 'GET' }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) }).catch(function () { return { ok: false, data: null } })
+                        apiFetch(apptsUrl, { method: 'GET' }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d } }).catch(function () { return { ok: r.ok, data: null } }) }).catch(function () { return { ok: false, data: null } })
                     ])
                         .then(function (results) {
-                            var items = []
-
-                            var waitingOver30 = 0
                             var queueRows = []
                             if (results[0] && results[0].ok && results[0].data) {
                                 queueRows = Array.isArray(results[0].data.data) ? results[0].data.data : []
-                                queueRows.forEach(function (q) {
-                                    if (!q || String(q.status || '') !== 'waiting') return
-                                    var dt = parseApiDate(q && q.queue_datetime ? q.queue_datetime : null)
-                                    if (!dt) return
-                                    var mins = (now.getTime() - dt.getTime()) / 60000
-                                    if (mins > 30) waitingOver30 += 1
-                                })
-                            }
-                            if (waitingOver30 > 0) {
-                                items.push(waitingOver30 + ' patient' + (waitingOver30 === 1 ? '' : 's') + ' waiting > 30 min')
                             }
 
-                            var lateAppointments = 0
                             var appts = []
                             if (results[1] && results[1].ok && results[1].data) {
                                 appts = Array.isArray(results[1].data.data) ? results[1].data.data : []
-                                appts.forEach(function (a) {
-                                    var dt2 = parseApiDate(a && a.appointment_datetime ? a.appointment_datetime : null)
-                                    if (!dt2) return
-                                    if (dt2.getTime() < now.getTime()) lateAppointments += 1
-                                })
                             }
-                            if (lateAppointments > 0) {
-                                items.push(lateAppointments + ' late appointment' + (lateAppointments === 1 ? '' : 's'))
-                            }
-
-                            var pendingVerifications = 0
-                            if (results[2] && results[2].ok && results[2].data && typeof results[2].data.pending === 'number') {
-                                pendingVerifications = results[2].data.pending
-                            }
-                            if (pendingVerifications > 0) {
-                                items.push(pendingVerifications + ' pending verification' + (pendingVerifications === 1 ? '' : 's'))
-                            }
-
-                            render(items)
 
                             if (nextApptsList) {
                                 var upcoming = appts.slice().map(function (a) {
@@ -275,10 +216,29 @@
 
                                 var serving = queueRows.filter(function (q) { return q && String(q.status || '') === 'serving' })
                                 serving.sort(queueSort)
-                                var nowServing = serving.length ? serving[0] : null
-                                var nowServingName = nowServing && nowServing.appointment && nowServing.appointment.patient
-                                    ? nameForUser(nowServing.appointment.patient)
-                                    : ''
+                                function queueLabel(q) {
+                                    if (q && q.queue_code) return String(q.queue_code)
+                                    var n = q && q.queue_number != null ? String(q.queue_number) : ''
+                                    while (n.length && n.length < 3) n = '0' + n
+                                    return n || '---'
+                                }
+
+                                function serviceSummaryFromQueue(q) {
+                                    var appt = q && q.appointment ? q.appointment : null
+                                    var services = appt && Array.isArray(appt.services) ? appt.services : []
+                                    var names = services.map(function (s) {
+                                        return s && s.service_name ? String(s.service_name).trim() : ''
+                                    }).filter(function (v) { return v !== '' })
+                                    if (!names.length) return ''
+                                    if (names.length === 1) return names[0]
+                                    return names[0] + ' +' + String(names.length - 1)
+                                }
+
+                                var nowServingLabels = serving.slice(0, 3).map(function (q) {
+                                    var patientName = q && q.appointment && q.appointment.patient ? nameForUser(q.appointment.patient) : 'Patient'
+                                    var serviceName = serviceSummaryFromQueue(q)
+                                    return queueLabel(q) + ' ' + patientName + (serviceName ? (' — ' + serviceName) : '')
+                                })
 
                                 var waiting = queueRows.filter(function (q) { return q && String(q.status || '') === 'waiting' })
                                 waiting.sort(queueSort)
@@ -287,11 +247,7 @@
                                 var nextCandidateId = nextCandidate && nextCandidate.queue_id ? String(nextCandidate.queue_id) : ''
 
                                 var html = ''
-                                if (nowServingName) {
-                                    html += '<li class="text-[0.78rem] text-slate-700"><span class="font-semibold">Now serving:</span> ' + escapeHtml(nowServingName) + '</li>'
-                                } else {
-                                    html += '<li class="text-[0.78rem] text-slate-500"><span class="font-semibold text-slate-600">Now serving:</span> —</li>'
-                                }
+                                html += '<li class="text-[0.78rem] text-slate-700"><span class="font-semibold">Now serving:</span> ' + (nowServingLabels.length ? escapeHtml(nowServingLabels.join(', ')) : '—') + '</li>'
 
                                 if (!next.length) {
                                     html += '<li class="text-[0.78rem] text-slate-500">No one waiting.</li>'
@@ -310,12 +266,10 @@
                             }
 
                             var stamp = 'Updated ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            if (meta) meta.textContent = stamp
                             if (nextApptsMeta) nextApptsMeta.textContent = stamp
                             if (nextQueueMeta) nextQueueMeta.textContent = stamp
                         })
                         .catch(function () {
-                            list.innerHTML = '<li class="text-[0.78rem] text-slate-500">Unable to load right now.</li>'
                             if (nextApptsList) nextApptsList.innerHTML = '<li class="text-[0.78rem] text-slate-500">Unable to load.</li>'
                             if (nextQueueList) nextQueueList.innerHTML = '<li class="text-[0.78rem] text-slate-500">Unable to load.</li>'
                             if (nextQueueBtn) nextQueueBtn.disabled = true

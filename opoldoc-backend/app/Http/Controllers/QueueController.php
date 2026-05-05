@@ -64,11 +64,12 @@ class QueueController extends Controller
             $defaultMinutesPerPatient = 120;
         }
 
-        $avgMinutesCache = [];
-        $avgMinutesForDoctorDate = function (int $doctorId, string $date) use (&$avgMinutesCache, $defaultMinutesPerPatient): int {
+        $doctorDateCache = [];
+        $scoreNow = now();
+        $snapshotForDoctorDate = function (int $doctorId, string $date) use (&$doctorDateCache, $defaultMinutesPerPatient, $scoreNow): array {
             $key = $doctorId.'|'.$date;
-            if (array_key_exists($key, $avgMinutesCache)) {
-                return (int) $avgMinutesCache[$key];
+            if (array_key_exists($key, $doctorDateCache)) {
+                return (array) $doctorDateCache[$key];
             }
 
             $items = Queue::query()
@@ -96,31 +97,56 @@ class QueueController extends Controller
                 $durations[] = $total;
             }
 
-            if (! count($durations)) {
-                $avgMinutesCache[$key] = $defaultMinutesPerPatient;
-                return $defaultMinutesPerPatient;
+            $avg = $defaultMinutesPerPatient;
+            if (count($durations)) {
+                $avg = (int) round(array_sum($durations) / count($durations));
+                if ($avg < 1) {
+                    $avg = $defaultMinutesPerPatient;
+                }
+                if ($avg > 120) {
+                    $avg = 120;
+                }
             }
 
-            $avg = (int) round(array_sum($durations) / count($durations));
-            if ($avg < 1) {
-                $avg = $defaultMinutesPerPatient;
-            }
-            if ($avg > 120) {
-                $avg = 120;
+            $sorted = $items->sort(function (Queue $a, Queue $b) use ($scoreNow) {
+                if ($a->status === 'serving' && $b->status !== 'serving') {
+                    return -1;
+                }
+                if ($b->status === 'serving' && $a->status !== 'serving') {
+                    return 1;
+                }
+
+                $sa = $a->totalScore($scoreNow);
+                $sb = $b->totalScore($scoreNow);
+                if ($sa !== $sb) {
+                    return $sb <=> $sa;
+                }
+                $na = (int) ($a->queue_number ?? 999999);
+                $nb = (int) ($b->queue_number ?? 999999);
+                if ($na !== $nb) {
+                    return $na <=> $nb;
+                }
+                return (int) ($a->queue_id ?? 0) <=> (int) ($b->queue_id ?? 0);
+            })->values();
+
+            $positions = [];
+            foreach ($sorted as $idx => $row) {
+                $positions[(int) $row->queue_id] = (int) $idx + 1;
             }
 
-            $avgMinutesCache[$key] = $avg;
-            return $avg;
+            $doctorDateCache[$key] = [
+                'avg' => $avg,
+                'positions' => $positions,
+            ];
+
+            return (array) $doctorDateCache[$key];
         };
 
-        $paginator->getCollection()->transform(function (Queue $queue) use ($avgMinutesForDoctorDate, $defaultMinutesPerPatient) {
+        $paginator->getCollection()->transform(function (Queue $queue) use ($snapshotForDoctorDate, $defaultMinutesPerPatient) {
             $queue->loadMissing('appointment.services');
 
             $doctorId = $queue->appointment ? $queue->appointment->doctor_id : null;
             $date = $queue->queue_datetime ? $queue->queue_datetime->toDateString() : now()->toDateString();
-
-            $priority = (int) ($queue->priority_level ?? 5);
-            $number = (int) ($queue->queue_number ?? 999999);
 
             if (! $doctorId) {
                 $queue->position = null;
@@ -130,28 +156,17 @@ class QueueController extends Controller
                 return $queue;
             }
 
-            $aheadCount = Queue::query()
-                ->whereHas('appointment', function ($q) use ($doctorId) {
-                    $q->where('doctor_id', $doctorId);
-                })
-                ->whereDate('queue_datetime', $date)
-                ->whereIn('status', ['waiting', 'serving'])
-                ->where(function ($q) use ($priority, $number) {
-                    $q->whereRaw('COALESCE(priority_level, 5) < ?', [$priority])
-                        ->orWhere(function ($q) use ($priority, $number) {
-                            $q->whereRaw('COALESCE(priority_level, 5) = ?', [$priority])
-                                ->whereRaw('COALESCE(queue_number, 999999) < ?', [$number]);
-                        });
-                })
-                ->count();
+            $snapshot = $snapshotForDoctorDate((int) $doctorId, $date);
+            $positions = is_array($snapshot['positions'] ?? null) ? $snapshot['positions'] : [];
+            $position = $positions[(int) $queue->queue_id] ?? null;
 
-            $position = $aheadCount + 1;
-            $avgMinutes = $avgMinutesForDoctorDate((int) $doctorId, $date);
+            $avgMinutes = (int) ($snapshot['avg'] ?? $defaultMinutesPerPatient);
             if ($avgMinutes < 1) {
                 $avgMinutes = $defaultMinutesPerPatient;
             }
 
-            $estimatedWait = $queue->status === 'serving' ? 0 : max(0, $aheadCount * $avgMinutes);
+            $aheadCount = $position ? max(0, ((int) $position) - 1) : null;
+            $estimatedWait = $queue->status === 'serving' ? 0 : ($aheadCount != null ? max(0, $aheadCount * $avgMinutes) : null);
 
             $queue->position = $position;
             $queue->estimated_wait_minutes = $estimatedWait;
@@ -335,7 +350,17 @@ class QueueController extends Controller
             ], 422);
         }
 
-        $next = DB::transaction(function () use ($date, $availableDoctorIds) {
+        $weight = Queue::waitScoreWeight();
+        $next = DB::transaction(function () use ($date, $availableDoctorIds, $weight) {
+            $baseExpr = "CASE COALESCE(priority_level, 5)
+                WHEN 1 THEN 5000
+                WHEN 2 THEN 4000
+                WHEN 3 THEN 3000
+                WHEN 4 THEN 2000
+                ELSE 1000
+            END";
+            $scoreExpr = "($baseExpr + (TIMESTAMPDIFF(MINUTE, COALESCE(queue_datetime, NOW()), NOW()) * ".((int) $weight)."))";
+
             $candidate = Queue::query()
                 ->with(['appointment.patient', 'appointment.doctor'])
                 ->whereDate('queue_datetime', $date)
@@ -343,8 +368,9 @@ class QueueController extends Controller
                 ->whereHas('appointment', function ($q) use ($availableDoctorIds) {
                     $q->whereIn('doctor_id', $availableDoctorIds);
                 })
-                ->orderByRaw('COALESCE(priority_level, 5) ASC')
+                ->orderByRaw($scoreExpr.' DESC')
                 ->orderByRaw('COALESCE(queue_number, 999999) ASC')
+                ->orderByRaw('COALESCE(queue_datetime, NOW()) ASC')
                 ->lockForUpdate()
                 ->first();
 
@@ -481,7 +507,7 @@ class QueueController extends Controller
         $data = $request->validate([
             'queue_number' => ['sometimes', 'integer'],
             'queue_datetime' => ['sometimes', 'nullable', 'date'],
-            'status' => ['sometimes', 'in:waiting,serving,done,cancelled'],
+            'status' => ['sometimes', 'in:waiting,serving,done,cancelled,no_show'],
             'priority_level' => ['sometimes', 'integer'],
         ]);
 
@@ -527,6 +553,8 @@ class QueueController extends Controller
                     $messageText = 'Queue update: Your queue entry is marked as done.';
                 } elseif ($queue->status === 'cancelled') {
                     $messageText = 'Queue update: Your queue entry was cancelled.';
+                } elseif ($queue->status === 'no_show') {
+                    $messageText = 'Queue update: You have been marked as no-show.';
                 }
             }
 

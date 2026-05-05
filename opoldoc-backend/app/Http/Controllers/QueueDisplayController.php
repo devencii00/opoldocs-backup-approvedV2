@@ -53,10 +53,26 @@ class QueueDisplayController extends Controller
             ->filter(function ($q) {
                 return (string) ($q->status ?? '') === 'waiting';
             })
-            ->sortBy(function ($q) {
-                $priority = (int) ($q->priority_level ?? 5);
-                $number = (int) ($q->queue_number ?? 999999);
-                return str_pad((string) $priority, 6, '0', STR_PAD_LEFT).'-'.str_pad((string) $number, 6, '0', STR_PAD_LEFT);
+            ->sort(function (Queue $a, Queue $b) {
+                if ($a->status === 'serving' && $b->status !== 'serving') {
+                    return -1;
+                }
+                if ($b->status === 'serving' && $a->status !== 'serving') {
+                    return 1;
+                }
+
+                $now = now();
+                $sa = $a->totalScore($now);
+                $sb = $b->totalScore($now);
+                if ($sa !== $sb) {
+                    return $sb <=> $sa;
+                }
+                $na = (int) ($a->queue_number ?? 999999);
+                $nb = (int) ($b->queue_number ?? 999999);
+                if ($na !== $nb) {
+                    return $na <=> $nb;
+                }
+                return (int) ($a->queue_id ?? 0) <=> (int) ($b->queue_id ?? 0);
             })
             ->values();
 
@@ -107,10 +123,26 @@ class QueueDisplayController extends Controller
             }
             $avgMinutesByDoctor[$docId] = $avg;
 
-            $sortedByDoctor[$docId] = collect($group)->sortBy(function ($q) {
-                $priority = (int) ($q->priority_level ?? 5);
-                $number = (int) ($q->queue_number ?? 999999);
-                return str_pad((string) $priority, 6, '0', STR_PAD_LEFT).'-'.str_pad((string) $number, 6, '0', STR_PAD_LEFT);
+            $now = now();
+            $sortedByDoctor[$docId] = collect($group)->sort(function (Queue $a, Queue $b) use ($now) {
+                if ($a->status === 'serving' && $b->status !== 'serving') {
+                    return -1;
+                }
+                if ($b->status === 'serving' && $a->status !== 'serving') {
+                    return 1;
+                }
+
+                $sa = $a->totalScore($now);
+                $sb = $b->totalScore($now);
+                if ($sa !== $sb) {
+                    return $sb <=> $sa;
+                }
+                $na = (int) ($a->queue_number ?? 999999);
+                $nb = (int) ($b->queue_number ?? 999999);
+                if ($na !== $nb) {
+                    return $na <=> $nb;
+                }
+                return (int) ($a->queue_id ?? 0) <=> (int) ($b->queue_id ?? 0);
             })->values();
         }
 

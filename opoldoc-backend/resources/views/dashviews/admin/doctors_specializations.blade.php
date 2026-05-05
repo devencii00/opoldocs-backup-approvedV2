@@ -329,9 +329,13 @@
         var scheduleSubmit = document.getElementById('adminDoctorScheduleSubmit')
         var scheduleSpinner = document.getElementById('adminDoctorScheduleSpinner')
         var scheduleSubmitLabel = document.getElementById('adminDoctorScheduleSubmitLabel')
-          var scheduleSelectAll = document.getElementById('adminScheduleSelectAll')
+        var scheduleDayFilter = document.getElementById('adminScheduleDayFilter')
+        var scheduleSelectAll = document.getElementById('adminScheduleSelectAll')
         var scheduleClearAll = document.getElementById('adminScheduleClearAll')
         var scheduleDeleteSelected = document.getElementById('adminScheduleDeleteSelected')
+        var scheduleBulkDay = document.getElementById('adminScheduleBulkDay')
+        var scheduleDeleteDay = document.getElementById('adminScheduleDeleteDay')
+        var scheduleDeleteAll = document.getElementById('adminScheduleDeleteAll')
         var availabilityOverlay = document.getElementById('adminDoctorAvailabilityOverlay')
         var availabilityTitle = document.getElementById('adminDoctorAvailabilityTitle')
         var availabilityClose = document.getElementById('adminDoctorAvailabilityClose')
@@ -358,6 +362,7 @@
         var currentDoctorIdForAvailability = null
         var loadedAvailabilitySchedules = []
         var doctors = []
+        var scheduleListWired = false
 
         var doctorEditOverlay = document.getElementById('adminDoctorEditOverlay')
         var doctorEditClose = document.getElementById('adminDoctorEditClose')
@@ -1066,54 +1071,160 @@
             })
         }
 
-           function wireScheduleBulkActions(doctorId) {
+        function loadSchedulesForDoctor(doctorId) {
             if (!scheduleList) return
+            if (!doctorId) return
+            loadedSchedules = []
+            scheduleList.innerHTML = '<div class="text-[0.78rem] text-slate-500">Loading schedules…</div>'
+            if (scheduleGrid) scheduleGrid.innerHTML = ''
+            showDoctorError('')
+            showDoctorSuccess('')
 
-            // Day filter change listener
-            var dayFilter = document.getElementById('adminScheduleDayFilter')
-            if (dayFilter) {
-                dayFilter.onchange = function() {
-                    renderGroupedSchedules()
-                }
-            }
+            fetchAllDoctorSchedules(doctorId, function (all) {
+                loadedSchedules = Array.isArray(all) ? all : []
+                renderGroupedSchedules()
+                renderScheduleGrid(loadedSchedules)
+                wireScheduleBulkActions(doctorId)
 
-            if (scheduleSelectAll) {
-                scheduleSelectAll.onclick = function() {
-                    var checks = scheduleList.querySelectorAll('.admin-schedule-check')
-                    checks.forEach(function(c) { c.checked = true })
+                if (!scheduleListWired) {
+                    scheduleListWired = true
+                    scheduleList.addEventListener('click', function (e) {
+                        var editBtn = e.target && e.target.closest ? e.target.closest('button.admin-schedule-edit[data-schedule-id]') : null
+                        if (editBtn) {
+                            var sid = editBtn.getAttribute('data-schedule-id') || ''
+                            var slot = loadedSchedules.find(function (s) { return String(s && s.schedule_id) === String(sid) })
+                            if (!slot) return
+
+                            currentScheduleId = String(slot.schedule_id)
+                            if (scheduleFromDay) scheduleFromDay.value = String(slot.day_of_week || '')
+                            if (scheduleToDay) scheduleToDay.value = ''
+
+                            var startInput = document.getElementById('admin_schedule_start_time')
+                            var endInput = document.getElementById('admin_schedule_end_time')
+                            if (startInput) startInput.value = String(slot.start_time || '').slice(0, 5)
+                            if (endInput) endInput.value = String(slot.end_time || '').slice(0, 5)
+                            if (scheduleMax) scheduleMax.value = slot.max_patients != null ? String(slot.max_patients) : ''
+                            if (scheduleRoom) scheduleRoom.value = slot.room_number != null ? String(slot.room_number) : ''
+                            if (scheduleSubmitLabel) scheduleSubmitLabel.textContent = 'Save changes'
+                            return
+                        }
+
+                        var deleteBtn = e.target && e.target.closest ? e.target.closest('button.admin-schedule-delete[data-schedule-id]') : null
+                        if (deleteBtn) {
+                            var sid2 = deleteBtn.getAttribute('data-schedule-id') || ''
+                            var slot2 = loadedSchedules.find(function (s) { return String(s && s.schedule_id) === String(sid2) })
+                            if (!slot2 || !currentDoctorIdForSchedule) return
+
+                            showDoctorError('')
+                            showDoctorSuccess('')
+                            confirmAction('Delete this schedule slot?', { countdownSeconds: 3, confirmText: 'Delete' })
+                                .then(function (confirmed) {
+                                    if (!confirmed) return
+                                    bulkDeleteSchedules({
+                                        doctor_id: parseInt(String(currentDoctorIdForSchedule), 10),
+                                        schedule_ids: [parseInt(String(slot2.schedule_id), 10)]
+                                    }, 'Schedule deleted.')
+                                })
+                            return
+                        }
+                    })
                 }
-            }
-            if (scheduleClearAll) {
-                scheduleClearAll.onclick = function() {
-                    var checks = scheduleList.querySelectorAll('.admin-schedule-check')
-                    checks.forEach(function(c) { c.checked = false })
-                }
-            }
-            if (scheduleDeleteSelected) {
-                scheduleDeleteSelected.onclick = function() {
-                    showDoctorError('')
-                    showDoctorSuccess('')
-                    var ids = getCheckedScheduleIds()
-                    if (!ids.length) {
-                        showDoctorError('Select at least one schedule.')
-                        return
-                    }
-                    confirmAction('Delete ' + ids.length + ' selected schedule(s)?', { countdownSeconds: 3, confirmText: 'Delete' })
-                        .then(function(confirmed) {
-                            if (!confirmed) return
-                            bulkDeleteSchedules({ doctor_id: parseInt(doctorId, 10), schedule_ids: ids }, 'Selected schedules deleted.')
-                        })
-                }
-            }
-        }, function (message) {
-                scheduleList.textContent = message || 'Failed to load schedules.'
+            }, function (message) {
+                loadedSchedules = []
+                scheduleList.innerHTML = '<div class="text-[0.78rem] text-slate-500">' + String(message || 'Failed to load schedules.') + '</div>'
+                renderScheduleGrid([])
             })
-        
+        }
+
+        function renderGroupedSchedules() {
+            if (!scheduleList) return
+            var filter = scheduleDayFilter ? String(scheduleDayFilter.value || '').toLowerCase() : ''
+            var slots = Array.isArray(loadedSchedules) ? loadedSchedules.slice() : []
+            if (!slots.length) {
+                scheduleList.innerHTML = '<div class="text-[0.78rem] text-slate-500">No schedules found.</div>'
+                return
+            }
+
+            var dayOrder = [
+                { key: 'mon', label: 'Monday' },
+                { key: 'tue', label: 'Tuesday' },
+                { key: 'wed', label: 'Wednesday' },
+                { key: 'thu', label: 'Thursday' },
+                { key: 'fri', label: 'Friday' },
+                { key: 'sat', label: 'Saturday' },
+                { key: 'sun', label: 'Sunday' }
+            ]
+
+            var grouped = {}
+            dayOrder.forEach(function (d) { grouped[d.key] = [] })
+
+            slots.forEach(function (s) {
+                var key = s && s.day_of_week ? String(s.day_of_week).toLowerCase() : ''
+                if (!key || !grouped[key]) return
+                if (filter && filter !== key) return
+                grouped[key].push(s)
+            })
+
+            dayOrder.forEach(function (d) {
+                grouped[d.key].sort(function (a, b) {
+                    var sa = String(a && a.start_time ? a.start_time : '').slice(0, 5)
+                    var sb = String(b && b.start_time ? b.start_time : '').slice(0, 5)
+                    if (sa < sb) return -1
+                    if (sa > sb) return 1
+                    var ia = parseInt(String(a && a.schedule_id ? a.schedule_id : 0), 10)
+                    var ib = parseInt(String(b && b.schedule_id ? b.schedule_id : 0), 10)
+                    if (isNaN(ia)) ia = 0
+                    if (isNaN(ib)) ib = 0
+                    return ia - ib
+                })
+            })
+
+            var html = ''
+            dayOrder.forEach(function (d) {
+                var rows = grouped[d.key] || []
+                if (!rows.length) return
+                html += '<div class="rounded-xl border border-slate-200 bg-white p-3">' +
+                    '<div class="flex items-center justify-between mb-2">' +
+                        '<div class="text-[0.72rem] font-semibold text-slate-900">' + d.label + '</div>' +
+                        '<div class="text-[0.7rem] text-slate-400">' + rows.length + ' slot(s)</div>' +
+                    '</div>'
+
+                rows.forEach(function (s) {
+                    var start = String(s && s.start_time ? s.start_time : '').slice(0, 5)
+                    var end = String(s && s.end_time ? s.end_time : '').slice(0, 5)
+                    var label = (formatTimeLabel(start) || start) + '–' + (formatTimeLabel(end) || end)
+                    var id = s && s.schedule_id != null ? String(s.schedule_id) : ''
+                    var isUnavailable = s && s.is_available === false
+                    var badgeClass = isUnavailable ? 'text-rose-700 bg-rose-50 border-rose-100' : 'text-emerald-700 bg-emerald-50 border-emerald-100'
+                    var badgeText = isUnavailable ? 'Unavailable' : 'Available'
+
+                    html += '<div class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 mb-1">' +
+                        '<label class="flex items-center gap-2">' +
+                            '<input type="checkbox" class="admin-schedule-check rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" data-schedule-id="' + id + '">' +
+                            '<span class="text-[0.78rem] text-slate-700 font-semibold">' + label + '</span>' +
+                        '</label>' +
+                        '<div class="flex items-center gap-2 shrink-0">' +
+                            '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[0.68rem] font-semibold border ' + badgeClass + '">' + badgeText + '</span>' +
+                            '<button type="button" class="text-[0.72rem] text-slate-700 hover:text-slate-900 font-semibold admin-schedule-edit" data-schedule-id="' + id + '">Edit</button>' +
+                            '<button type="button" class="text-[0.72rem] text-rose-700 hover:text-rose-800 font-semibold admin-schedule-delete" data-schedule-id="' + id + '">Delete</button>' +
+                        '</div>' +
+                    '</div>'
+                })
+
+                html += '</div>'
+            })
+
+            if (!html) {
+                html = '<div class="text-[0.78rem] text-slate-500">No schedules found for the selected filter.</div>'
+            }
+
+            scheduleList.innerHTML = html
+        }
+
 
         function setBulkDeleting(isDeleting) {
             var buttons = [scheduleSelectAll, scheduleClearAll, scheduleDeleteSelected, scheduleDeleteDay, scheduleDeleteAll]
             buttons.forEach(function (btn) {
-                if (!btn) return
                 btn.disabled = !!isDeleting
                 btn.classList.toggle('opacity-60', !!isDeleting)
                 btn.classList.toggle('cursor-not-allowed', !!isDeleting)
@@ -1181,6 +1292,12 @@
 
         function wireScheduleBulkActions(doctorId) {
             if (!scheduleList) return
+
+            if (scheduleDayFilter) {
+                scheduleDayFilter.onchange = function () {
+                    renderGroupedSchedules()
+                }
+            }
 
             if (scheduleSelectAll) {
                 scheduleSelectAll.onclick = function () {
@@ -1679,5 +1796,5 @@
         }
 
         loadDoctors()
-    
+    })
 </script>
