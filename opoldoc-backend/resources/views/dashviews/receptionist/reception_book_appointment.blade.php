@@ -2026,6 +2026,59 @@ function setAppointmentTab(tab) {
             return names.join(', ')
         }
 
+        function manageStatusLabel(appt) {
+            var status = appt && appt.status ? String(appt.status) : ''
+            if (!status) return ''
+            if (status === 'confirmed') {
+                if (appt && appt.check_in_time) return 'checked-in'
+            }
+            return status.replace(/_/g, ' ')
+        }
+
+        function manageRowHtml(appt) {
+            var id = appt && appt.appointment_id != null ? appt.appointment_id : ''
+            var when = safeIsoParts(appt && appt.appointment_datetime ? appt.appointment_datetime : '')
+            var p = appt ? appt.patient : null
+            var d = appt ? appt.doctor : null
+            var patientName = patientFullName(p) || ('Patient #' + (p && p.user_id != null ? p.user_id : ''))
+            var doctorName = patientFullName(d) || ('Doctor #' + (d && d.user_id != null ? d.user_id : ''))
+            var age = ageFromBirthdate(p && p.birthdate ? p.birthdate : '')
+            var contact = p && p.contact_number ? String(p.contact_number) : '—'
+            var serviceText = serviceSummary(appt)
+            var statusLabel = manageStatusLabel(appt)
+            var statusBadge = statusLabel
+                ? ('<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[0.68rem] border border-slate-200 bg-slate-50 text-slate-700">' + escapeHtml(statusLabel) + '</span>')
+                : ''
+            return (
+                '<tr data-appointment-id="' + escapeHtml(id) + '">' +
+                    '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(when.date || '—') + statusBadge + '</td>' +
+                    '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(when.time ? formatTime12h(when.time) : '—') + '</td>' +
+                    '<td class="px-3 py-2 text-slate-700 min-w-[12rem] whitespace-nowrap">' + escapeHtml(patientName) + '</td>' +
+                    '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(age || '—') + '</td>' +
+                    '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(contact) + '</td>' +
+                    '<td class="px-3 py-2 text-slate-700 min-w-[14rem] whitespace-nowrap">' + escapeHtml(serviceText) + '</td>' +
+                    '<td class="px-3 py-2 text-slate-700 min-w-[12rem] whitespace-nowrap">' + escapeHtml(doctorName) + '</td>' +
+                    '<td class="px-3 py-2 text-right whitespace-nowrap">' +
+                        '<div class="inline-flex items-center gap-1">' +
+                           
+                            '<button type="button" data-action="check_in" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold">Check-in</button>' +
+                            '<button type="button" data-action="complete" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold">Complete</button>' +
+                            '<button type="button" data-action="cancel" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-semibold">Cancel</button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>'
+            )
+        }
+
+        function applyManageRowUpdate(appt) {
+            if (!manageTableBody) return
+            if (!appt || appt.appointment_id == null) return
+            var id = String(appt.appointment_id)
+            var row = manageTableBody.querySelector('tr[data-appointment-id="' + id + '"]')
+            if (!row) return
+            row.outerHTML = manageRowHtml(appt)
+        }
+
         function renderManageServiceResults() {
             if (!manageServiceResults || !manageServiceSearch) return
             var q = String(manageServiceSearch.value || '').trim()
@@ -2080,38 +2133,7 @@ function setAppointmentTab(tab) {
                 manageTableBody.innerHTML = '<tr><td colspan="8" class="px-3 py-6 text-center text-[0.78rem] text-slate-500">No appointments found.</td></tr>'
                 return
             }
-            manageTableBody.innerHTML = rows.map(function (appt) {
-                var id = appt && appt.appointment_id != null ? appt.appointment_id : ''
-                var when = safeIsoParts(appt && appt.appointment_datetime ? appt.appointment_datetime : '')
-                var p = appt ? appt.patient : null
-                var d = appt ? appt.doctor : null
-                var patientName = patientFullName(p) || ('Patient #' + (p && p.user_id != null ? p.user_id : ''))
-                var doctorName = patientFullName(d) || ('Doctor #' + (d && d.user_id != null ? d.user_id : ''))
-                var age = ageFromBirthdate(p && p.birthdate ? p.birthdate : '')
-                var contact = p && p.contact_number ? String(p.contact_number) : '—'
-                var serviceText = serviceSummary(appt)
-                var status = appt && appt.status ? String(appt.status) : ''
-                var statusBadge = status ? ('<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[0.68rem] border border-slate-200 bg-slate-50 text-slate-700">' + escapeHtml(status) + '</span>') : ''
-                return (
-                    '<tr>' +
-                        '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(when.date || '—') + statusBadge + '</td>' +
-                        '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(when.time ? formatTime12h(when.time) : '—') + '</td>' +
-                        '<td class="px-3 py-2 text-slate-700 min-w-[12rem] whitespace-nowrap">' + escapeHtml(patientName) + '</td>' +
-                        '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(age || '—') + '</td>' +
-                        '<td class="px-3 py-2 text-slate-700 whitespace-nowrap">' + escapeHtml(contact) + '</td>' +
-                        '<td class="px-3 py-2 text-slate-700 min-w-[14rem] whitespace-nowrap">' + escapeHtml(serviceText) + '</td>' +
-                        '<td class="px-3 py-2 text-slate-700 min-w-[12rem] whitespace-nowrap">' + escapeHtml(doctorName) + '</td>' +
-                        '<td class="px-3 py-2 text-right whitespace-nowrap">' +
-                            '<div class="inline-flex items-center gap-1">' +
-                                '<button type="button" data-action="view" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold">View</button>' +
-                                '<button type="button" data-action="check_in" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold">Check-in</button>' +
-                                '<button type="button" data-action="complete" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold">Complete</button>' +
-                                '<button type="button" data-action="cancel" data-id="' + escapeHtml(id) + '" class="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-semibold">Cancel</button>' +
-                            '</div>' +
-                        '</td>' +
-                    '</tr>'
-                )
-            }).join('')
+            manageTableBody.innerHTML = rows.map(manageRowHtml).join('')
         }
 
         function loadManageAppointments() {
@@ -2272,6 +2294,7 @@ function setAppointmentTab(tab) {
                                 }
                                 showManageSuccess('Appointment has been updated.')
                                 showManageResult(result.data)
+                                applyManageRowUpdate(result.data)
                                 loadManageAppointments()
                             })
                     })

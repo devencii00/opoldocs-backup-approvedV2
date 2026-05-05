@@ -71,10 +71,9 @@
             <div class="w-full md:w-40">
                 <label for="reception_queue_sort" class="block text-[0.7rem] text-slate-600 mb-1">Sort</label>
                 <select id="reception_queue_sort" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 outline-none">
-                    <option value="number_asc">Queue number asc</option>
-                    <option value="number_desc">Queue number desc</option>
-                    <option value="date_asc">Date asc</option>
-                    <option value="date_desc">Date desc</option>
+                    <option value="priority">Priority</option>
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
                 </select>
             </div>
         </div>
@@ -530,15 +529,32 @@
                 var nb = parseInt(b.getAttribute('data-queue-number') || '0', 10)
                 var da = a.getAttribute('data-date') || ''
                 var db = b.getAttribute('data-date') || ''
+                var pa = parseInt(a.getAttribute('data-priority') || '5', 10)
+                var pb = parseInt(b.getAttribute('data-priority') || '5', 10)
+                var sa = String(a.getAttribute('data-status') || '').toLowerCase()
+                var sb = String(b.getAttribute('data-status') || '').toLowerCase()
 
-                if (value === 'number_asc' || value === 'number_desc') {
-                    if (na < nb) return value === 'number_asc' ? -1 : 1
-                    if (na > nb) return value === 'number_asc' ? 1 : -1
+                if (sa === 'serving' && sb !== 'serving') return -1
+                if (sb === 'serving' && sa !== 'serving') return 1
+
+                if (value === 'priority') {
+                    if (pa < pb) return -1
+                    if (pa > pb) return 1
+                    if (na < nb) return -1
+                    if (na > nb) return 1
                     return 0
                 }
 
-                if (da < db) return value === 'date_asc' ? -1 : 1
-                if (da > db) return value === 'date_asc' ? 1 : -1
+                if (value === 'newest') {
+                    if (da < db) return 1
+                    if (da > db) return -1
+                    if (na < nb) return 1
+                    if (na > nb) return -1
+                    return 0
+                }
+
+                if (da < db) return -1
+                if (da > db) return 1
                 return 0
             })
 
